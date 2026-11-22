@@ -2845,6 +2845,185 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+
+    /* ==================== Tab 6: 法语发音与拼读规则样式 ==================== */
+    .ph-golden-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .ph-golden-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .ph-golden-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--amber);
+      letter-spacing: 0.03em;
+      margin-bottom: 6px;
+    }
+
+    .ph-golden-title {
+      margin: 0 0 6px;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--ink-900);
+    }
+
+    .ph-golden-desc {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--ink-600);
+    }
+
+    .ph-section {
+      margin-bottom: 22px;
+    }
+
+    .ph-section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-soft);
+    }
+
+    .ph-section-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--ink-900);
+    }
+
+    .ph-section-sub {
+      font-size: 12.5px;
+      color: var(--ink-500);
+      font-weight: 600;
+    }
+
+    .ph-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 14px;
+    }
+
+    .ph-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ph-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .ph-pattern {
+      font-family: Georgia, 'Times New Roman', serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ink-900);
+      letter-spacing: 0.01em;
+    }
+
+    .ph-ipa-badge {
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--masc);
+      white-space: nowrap;
+    }
+
+    .ph-tip {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--ink-700);
+    }
+
+    .ph-warn {
+      font-size: 12px;
+      line-height: 1.55;
+      color: #92400E;
+      background: #FEF3C7;
+      border: 1px solid #FDE68A;
+      border-radius: 9px;
+      padding: 7px 10px;
+    }
+
+    .ph-examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: auto;
+      padding-top: 4px;
+    }
+
+    .ph-ex-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--bg-page);
+      color: var(--ink-800);
+      font-size: 12.5px;
+      cursor: pointer;
+      transition: background-color 0.14s ease, border-color 0.14s ease, transform 0.1s ease;
+    }
+
+    .ph-ex-btn:hover {
+      background: #EFE2C4;
+      border-color: var(--ink-400);
+      transform: translateY(-1px);
+    }
+
+    .ph-ex-word {
+      font-weight: 800;
+      color: var(--ink-900);
+    }
+
+    .ph-ex-ipa {
+      font-size: 11.5px;
+      color: var(--masc);
+      font-weight: 600;
+    }
+
+    .ph-ex-zh {
+      font-size: 11.5px;
+      color: var(--ink-500);
+    }
+
+    @media (max-width: 900px) {
+      .ph-golden-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
 <body>
@@ -2867,11 +3046,12 @@
           </div>
         </div>
 
-        <!-- 5 大功能主导航（集成在 Web 顶栏） -->
+        <!-- 6 大功能主导航（集成在 Web 顶栏） -->
         <nav class="nav-tabs" role="tablist" aria-label="主要功能标签">
           <button class="nav-tab active" data-tab="flashcards" role="tab" aria-selected="true" type="button">背词卡片</button>
           <button class="nav-tab" data-tab="gender" role="tab" aria-selected="false" type="button">阴阳性快刷</button>
           <button class="nav-tab" data-tab="spelling" role="tab" aria-selected="false" type="button">拼写测验</button>
+          <button class="nav-tab" data-tab="phonetics" role="tab" aria-selected="false" type="button">发音规则</button>
           <button class="nav-tab" data-tab="memory" role="tab" aria-selected="false" type="button">记忆曲线</button>
           <button class="nav-tab" data-tab="books" role="tab" aria-selected="false" type="button">词书管理</button>
         </nav>
@@ -3579,6 +3759,46 @@
           <button id="btn-wl-empty-add" class="btn btn-primary btn-sm" type="button">＋ 录入新词</button>
         </div>
       </div>
+    </section>
+
+    <!-- ================================================================ -->
+    <!-- Tab 6: 法语发音与拼读规则 (Phonetics & Reading Rules)               -->
+    <!-- ================================================================ -->
+    <section id="panel-phonetics" class="hidden">
+      <div class="ph-golden-grid">
+        <div class="ph-golden-card">
+          <div class="ph-golden-kicker">✦ 铁律 01 · 见词能读</div>
+          <h3 class="ph-golden-title">拼写与读音高度一一对应</h3>
+          <p class="ph-golden-desc">法语不像英语有大量“不按套路读”的词。只要记住常见的<strong>元音组合、鼻化元音和辅音规则</strong>，哪怕不认识词义也能准确读出来。</p>
+        </div>
+        <div class="ph-golden-card">
+          <div class="ph-golden-kicker">✦ 铁律 02 · 词尾静音与 CaReFuL</div>
+          <h3 class="ph-golden-title">词尾 -e 与多数辅音不发音</h3>
+          <p class="ph-golden-desc">单词末尾的 <code>-e</code>、<code>-s</code>、<code>-t</code>、<code>-d</code>、<code>-x</code>、<code>-p</code> 通常静音；但词尾 <strong>C、R、F、L</strong>（记作 <strong>CaReFuL</strong>）大多发音（动词 <code>-er</code> 除外）。</p>
+        </div>
+        <div class="ph-golden-card">
+          <div class="ph-golden-kicker">✦ 铁律 03 · 重音与节奏</div>
+          <h3 class="ph-golden-title">重音永远落在最后一个音节</h3>
+          <p class="ph-golden-desc">法语没有英语那样忽前忽后的词重音，每个词或意群的重音都平稳落在<strong>最后一个发音音节</strong>上，元音饱满不吞音。</p>
+        </div>
+      </div>
+
+      <div class="toolbar-row" style="margin-bottom: 16px;">
+        <div id="ph-filter-pills" class="filter-pills">
+          <button class="filter-pill active" data-ph-cat="all" type="button">全部规则</button>
+          <button class="filter-pill" data-ph-cat="vowels" type="button">元音与组合</button>
+          <button class="filter-pill" data-ph-cat="nasals" type="button">鼻化元音</button>
+          <button class="filter-pill" data-ph-cat="consonants" type="button">辅音与变音</button>
+          <button class="filter-pill" data-ph-cat="endings" type="button">词尾与静音</button>
+          <button class="filter-pill" data-ph-cat="liaison" type="button">联诵与省音</button>
+        </div>
+        <label class="switch-label">
+          <input id="toggle-ph-slow" class="switch-input amber" type="checkbox" />
+          <span>🐢 慢速跟读 (0.65x)</span>
+        </label>
+      </div>
+
+      <div id="ph-rules-container"></div>
     </section>
   </main>
 
@@ -5439,7 +5659,7 @@
         btn.setAttribute('aria-selected', String(active));
       });
 
-      ['flashcards', 'gender', 'spelling', 'memory', 'books'].forEach((name) => {
+      ['flashcards', 'gender', 'spelling', 'phonetics', 'memory', 'books'].forEach((name) => {
         document.getElementById(`panel-${name}`).classList.toggle('hidden', name !== tab);
       });
 
@@ -5447,6 +5667,8 @@
         WordbookManager.renderAll();
       } else if (tab === 'memory') {
         MemoryCurve.render();
+      } else if (tab === 'phonetics') {
+        PhoneticsGuide.render();
       } else if (tab === 'gender') {
         GenderBlitz.init();
       } else if (tab === 'spelling') {
@@ -7848,6 +8070,378 @@
     }
 
     /* =========================================================================
+     * 13.2 法语发音与拼读规则模块 (PhoneticsGuide)
+     * ========================================================================= */
+    const PhoneticsGuide = {
+      activeCat: 'all',
+      sections: [
+        {
+          id: 'vowels',
+          title: '一、元音与常见元音字母组合',
+          sub: '点击任意例词即可立即听法语标准读音',
+          rules: [
+            {
+              pattern: 'é / -er / -ez',
+              ipa: '/e/',
+              tip: '闭口 e：嘴角向两边拉开（像微笑），舌尖抵下齿，发音短促清晰，类似汉语“诶”的前半段但不滑动。',
+              examples: [
+                { w: 'café', ipa: '/ka.fe/', zh: '咖啡' },
+                { w: 'parler', ipa: '/paʁ.le/', zh: '说话' },
+                { w: 'chez', ipa: '/ʃe/', zh: '在…家' }
+              ]
+            },
+            {
+              pattern: 'è / ê / ai / ei / -et',
+              ipa: '/ɛ/',
+              tip: '开口 e：嘴张得比 /e/ 更大，发音类似英语 bed 里的 e。词末 -et 及闭音节中的 e 也读 /ɛ/。',
+              examples: [
+                { w: 'mère', ipa: '/mɛʁ/', zh: '母亲' },
+                { w: 'fête', ipa: '/fɛt/', zh: '节日' },
+                { w: 'mais', ipa: '/mɛ/', zh: '但是' },
+                { w: 'billet', ipa: '/bi.jɛ/', zh: '车票' }
+              ]
+            },
+            {
+              pattern: 'ou / où / oû',
+              ipa: '/u/',
+              tip: '双唇用力向前突出撮圆，发饱满的“乌”音（类似汉语“屋”）。注意区分法语单字母 u (/y/)！',
+              examples: [
+                { w: 'bonjour', ipa: '/bɔ̃.ʒuʁ/', zh: '你好' },
+                { w: 'vous', ipa: '/vu/', zh: '您/你们' },
+                { w: 'goût', ipa: '/ɡu/', zh: '味道' }
+              ]
+            },
+            {
+              pattern: 'u / û',
+              ipa: '/y/',
+              tip: '撮口“淤”音：舌位发英语 /i/，同时双唇用力撮圆成小孔，类似汉语“鱼/淤”。',
+              warn: '切忌读成 /u/！tu (/ty/ 你) 与 tout (/tu/ 全部) 靠这一音区分。',
+              examples: [
+                { w: 'tu', ipa: '/ty/', zh: '你' },
+                { w: 'rue', ipa: '/ʁy/', zh: '街道' },
+                { w: 'musée', ipa: '/my.ze/', zh: '博物馆' }
+              ]
+            },
+            {
+              pattern: 'au / eau / ô',
+              ipa: '/o/',
+              tip: '闭口 o：双唇撮圆前突，发音饱满紧实（类似汉语“欧”但口型不动、不滑动）。',
+              examples: [
+                { w: 'eau', ipa: '/o/', zh: '水' },
+                { w: 'beau', ipa: '/bo/', zh: '美丽的' },
+                { w: 'hôtel', ipa: '/o.tɛl/', zh: '酒店' }
+              ]
+            },
+            {
+              pattern: 'oi / oy',
+              ipa: '/wa/',
+              tip: '由半元音 /w/ 快速滑向 /a/，读作清晰的“哇”（不读英语的“奥伊”）。',
+              examples: [
+                { w: 'moi', ipa: '/mwa/', zh: '我' },
+                { w: 'voiture', ipa: '/vwa.tyʁ/', zh: '汽车' },
+                { w: 'voyage', ipa: '/vwa.jaʒ/', zh: '旅行' }
+              ]
+            },
+            {
+              pattern: 'eu / œu',
+              ipa: '/ø/ 或 /œ/',
+              tip: '在词尾或 /z/ 前发闭口 /ø/（如 bleu、deux）；在多数发音辅音前（尤其 r/l/f 前）发开口 /œ/（如 fleur、sœur）。',
+              examples: [
+                { w: 'bleu', ipa: '/blø/', zh: '蓝色的' },
+                { w: 'heureux', ipa: '/ø.ʁø/', zh: '幸福的' },
+                { w: 'fleur', ipa: '/flœʁ/', zh: '花' },
+                { w: 'œuf', ipa: '/œf/', zh: '鸡蛋' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'nasals',
+          title: '二、四大鼻化元音（法语灵魂发音）',
+          sub: '元音 + n/m 在词尾或辅音前才鼻化；若后面紧跟元音或双写 nn/mm，则不鼻化！',
+          rules: [
+            {
+              pattern: 'an / am / en / em',
+              ipa: '/ɑ̃/',
+              tip: '大口“啊”加鼻腔共鸣：口腔张大、舌头后缩，气流同时从口鼻出来，n/m 本身不要发成舌尖抵上颚的音。',
+              warn: '遇元音或双写不鼻化：如 année /a.ne/、femme /fam/。',
+              examples: [
+                { w: 'France', ipa: '/fʁɑ̃s/', zh: '法国' },
+                { w: 'enfant', ipa: '/ɑ̃.fɑ̃/', zh: '孩子' },
+                { w: 'temps', ipa: '/tɑ̃/', zh: '时间/天气' }
+              ]
+            },
+            {
+              pattern: 'on / om',
+              ipa: '/ɔ̃/',
+              tip: '圆唇“奥”加鼻音：双唇向前撮成圆形，舌后部抬起，发出浑厚的鼻化 /ɔ̃/。',
+              examples: [
+                { w: 'bon', ipa: '/bɔ̃/', zh: '好的' },
+                { w: 'nom', ipa: '/nɔ̃/', zh: '姓氏' },
+                { w: 'monde', ipa: '/mɔ̃d/', zh: '世界' }
+              ]
+            },
+            {
+              pattern: 'in / im / ain / ein / yn / ym',
+              ipa: '/ɛ̃/',
+              tip: '扁唇开口 /ɛ/ 加鼻音：嘴角微向两边拉（像微笑着发“安”），不要收圆嘴唇。',
+              examples: [
+                { w: 'vin', ipa: '/vɛ̃/', zh: '葡萄酒' },
+                { w: 'pain', ipa: '/pɛ̃/', zh: '面包' },
+                { w: 'sympa', ipa: '/sɛ̃.pa/', zh: '友善的' }
+              ]
+            },
+            {
+              pattern: 'un / um',
+              ipa: '/œ̃/ (现代常并入 /ɛ̃/)',
+              tip: '在 /ɛ̃/ 的基础上双唇略微撮圆；现代巴黎标准法语中日常基本与 /ɛ̃/ 同音。',
+              examples: [
+                { w: 'un', ipa: '/œ̃/', zh: '一个(阳)' },
+                { w: 'lundi', ipa: '/lœ̃.di/', zh: '周一' },
+                { w: 'brun', ipa: '/bʁœ̃/', zh: '棕色的' }
+              ]
+            },
+            {
+              pattern: 'ien / oin',
+              ipa: '/jɛ̃/ · /wɛ̃/',
+              tip: '半元音 + 鼻化元音 /ɛ̃/：ien 读“央(扁口)” /jɛ̃/，oin 读“弯(扁口)” /wɛ̃/。',
+              examples: [
+                { w: 'bien', ipa: '/bjɛ̃/', zh: '好' },
+                { w: 'chien', ipa: '/ʃjɛ̃/', zh: '狗' },
+                { w: 'loin', ipa: '/lwɛ̃/', zh: '远的' },
+                { w: 'point', ipa: '/pwɛ̃/', zh: '点' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'consonants',
+          title: '三、辅音与特殊拼读组合',
+          sub: '掌握这些固定搭配，就能避开 90% 的法语拼读坑',
+          rules: [
+            {
+              pattern: 'c / ç / qu',
+              ipa: '/s/ 或 /k/',
+              tip: 'c 在 e, i, y 前读 /s/（如 cinéma）；其余情况读 /k/（如 café）。ç（软音符）永远读 /s/；qu 永远读 /k/（u 不发音）。',
+              examples: [
+                { w: 'cinéma', ipa: '/si.ne.ma/', zh: '电影院' },
+                { w: 'garçon', ipa: '/ɡaʁ.sɔ̃/', zh: '男孩' },
+                { w: 'qui', ipa: '/ki/', zh: '谁' }
+              ]
+            },
+            {
+              pattern: 'g / gu',
+              ipa: '/ʒ/ 或 /ɡ/',
+              tip: 'g 在 e, i, y 前读浊辅音 /ʒ/（类似“日”的摩擦音）；在 a, o, u 或辅音前读 /ɡ/。gu 在 e, i 前用来保住 /ɡ/ 音（u 静音）。',
+              examples: [
+                { w: 'plage', ipa: '/plaʒ/', zh: '海滩' },
+                { w: 'gare', ipa: '/ɡaʁ/', zh: '火车站' },
+                { w: 'guitare', ipa: '/ɡi.taʁ/', zh: '吉他' }
+              ]
+            },
+            {
+              pattern: 'ch / ph',
+              ipa: '/ʃ/ · /f/',
+              tip: '法语 ch 几乎总是读轻柔的“诗” /ʃ/（不读英语的 /tʃ/！）；ph 固定读 /f/。',
+              examples: [
+                { w: 'chat', ipa: '/ʃa/', zh: '猫' },
+                { w: 'chambre', ipa: '/ʃɑ̃bʁ/', zh: '房间' },
+                { w: 'photo', ipa: '/fɔ.to/', zh: '照片' }
+              ]
+            },
+            {
+              pattern: 'gn',
+              ipa: '/ɲ/',
+              tip: '舌面贴硬腭发“尼”的鼻辅音，类似汉语“捏”的声母，连贯自然。',
+              examples: [
+                { w: 'montagne', ipa: '/mɔ̃.taɲ/', zh: '山' },
+                { w: 'champagne', ipa: '/ʃɑ̃.paɲ/', zh: '香槟' },
+                { w: 'gagner', ipa: '/ɡa.ɲe/', zh: '赢得' }
+              ]
+            },
+            {
+              pattern: 's（元音之间）vs ss',
+              ipa: '/z/ vs /s/',
+              tip: '单个 s 夹在两个元音字母之间时必须浊化读 /z/；想在元音间发清音 /s/ 必须双写 ss。',
+              warn: '经典对比：poison /pwa.zɔ̃/ (毒药) vs poisson /pwa.sɔ̃/ (鱼)！',
+              examples: [
+                { w: 'maison', ipa: '/mɛ.zɔ̃/', zh: '房子' },
+                { w: 'musique', ipa: '/my.zik/', zh: '音乐' },
+                { w: 'poisson', ipa: '/pwa.sɔ̃/', zh: '鱼' }
+              ]
+            },
+            {
+              pattern: 'ill / ail / eil / euil',
+              ipa: '/j/ 或 /ij/',
+              tip: '元音后接 ill/il 通常发半元音 /j/（如 travail, soleil, famille）。例外：ville /vil/、mille /mil/、tranquille /tʁɑ̃.kil/ 读 /il/。',
+              examples: [
+                { w: 'famille', ipa: '/fa.mij/', zh: '家庭' },
+                { w: 'soleil', ipa: '/sɔ.lɛj/', zh: '太阳' },
+                { w: 'travail', ipa: '/tʁa.vaj/', zh: '工作' },
+                { w: 'ville', ipa: '/vil/', zh: '城市(例外)' }
+              ]
+            },
+            {
+              pattern: 'r（小舌音）',
+              ipa: '/ʁ/',
+              tip: '法语 r 是小舌擦音（不是英语卷舌音）：舌尖放松抵下齿，喉咙后部轻轻摩擦出气（类似轻漱口的感觉，切忌用力过猛）。',
+              examples: [
+                { w: 'Paris', ipa: '/pa.ʁi/', zh: '巴黎' },
+                { w: 'merci', ipa: '/mɛʁ.si/', zh: '谢谢' },
+                { w: 'rouge', ipa: '/ʁuʒ/', zh: '红色的' }
+              ]
+            },
+            {
+              pattern: '-tion / -tiel',
+              ipa: '/sjɔ̃/ · /sjɛl/',
+              tip: '词尾 -tion 中的 t 读作 /s/，整体读 /sjɔ̃/（但如果前面有 s，如 question，则 t 仍读 /t/：/kɛs.tjɔ̃/）。',
+              examples: [
+                { w: 'attention', ipa: '/a.tɑ̃.sjɔ̃/', zh: '注意' },
+                { w: 'natation', ipa: '/na.ta.sjɔ̃/', zh: '游泳' },
+                { w: 'question', ipa: '/kɛs.tjɔ̃/', zh: '问题(s后读t)' }
+              ]
+            },
+            {
+              pattern: '哑音 h vs 嘘音 h',
+              ipa: '均不发音',
+              tip: '法语中任何 h 都不发音！区别在于：哑音 h（如 hôtel, habiter）前面可以省音和联诵（l’hôtel）；嘘音 h（如 haut, Hollande）禁止省音和联诵（le haut）。',
+              examples: [
+                { w: "l'hôtel", ipa: '/lo.tɛl/', zh: '酒店(哑音h)' },
+                { w: 'habiter', ipa: '/a.bi.te/', zh: '居住(哑音h)' },
+                { w: 'haut', ipa: '/o/', zh: '高的(嘘音h)' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'endings',
+          title: '四、词尾发音与静音规律',
+          sub: '记住 CaReFuL 法则，立刻判断词尾字母读不读',
+          rules: [
+            {
+              pattern: '词尾 C · R · F · L (CaReFuL)',
+              ipa: '通常发音',
+              tip: '以 c, r, f, l 结尾的单词，尾字母大多清晰发音（如 sac, mer, chef, hôtel）。',
+              warn: '常见例外：动词不定式及多音节词尾 -er 读 /e/（r 不发音，如 parler、boulanger）。',
+              examples: [
+                { w: 'sac', ipa: '/sak/', zh: '包' },
+                { w: 'mer', ipa: '/mɛʁ/', zh: '大海' },
+                { w: 'tarif', ipa: '/ta.ʁif/', zh: '价格' },
+                { w: 'cheval', ipa: '/ʃə.val/', zh: '马' }
+              ]
+            },
+            {
+              pattern: '词尾 -e / -s / -t / -d / -x / -p',
+              ipa: '通常静音',
+              tip: '词尾不带重音符号的 -e 以及 s, t, d, x, p, z 通常不发音；但如果在这些辅音后面加了 -e（如阴性变化），辅音就“被唤醒”要发音！',
+              examples: [
+                { w: 'petit', ipa: '/pə.ti/', zh: '小的(阳,t静音)' },
+                { w: 'petite', ipa: '/pə.tit/', zh: '小的(阴,t发音)' },
+                { w: 'beaucoup', ipa: '/bo.ku/', zh: '很多(p静音)' },
+                { w: 'prix', ipa: '/pʁi/', zh: '价格(x静音)' }
+              ]
+            },
+            {
+              pattern: '动词复数词尾 -ent',
+              ipa: '完全静音',
+              tip: '在第三人称复数动词（ils / elles）末尾，-ent 永远不发音！这与副词后缀 -ment (/mɑ̃/) 不同。',
+              examples: [
+                { w: 'ils parlent', ipa: '/il paʁl/', zh: '他们说' },
+                { w: 'elles habitent', ipa: '/ɛl.z‿a.bit/', zh: '她们居住' },
+                { w: 'vraiment', ipa: '/vʁɛ.mɑ̃/', zh: '真的(副词读/mɑ̃/)' }
+              ]
+            }
+          ]
+        },
+        {
+          id: 'liaison',
+          title: '五、联诵（Liaison）与省音（Élision）',
+          sub: '让法语听起来丝滑连贯的秘诀',
+          rules: [
+            {
+              pattern: '常见必联诵 + 联诵变音',
+              ipa: 's/x→/z/ · d→/t/',
+              tip: '前词以静音辅音结尾、后词以元音或哑音 h 开头，且语法紧密相连（冠词/代词/形容词 + 名词或动词）时必须联诵。联诵时 s/x 变 /z/，d 变 /t/，f 变 /v/。',
+              examples: [
+                { w: 'les amis', ipa: '/le.z‿a.mi/', zh: '朋友们' },
+                { w: 'vous avez', ipa: '/vu.z‿a.ve/', zh: '您有' },
+                { w: 'grand hôtel', ipa: '/ɡʁɑ̃.t‿o.tɛl/', zh: '大酒店' },
+                { w: 'petit ami', ipa: '/pə.ti.t‿a.mi/', zh: '男朋友' }
+              ]
+            },
+            {
+              pattern: '禁止联诵的常见场景',
+              ipa: '绝对不联',
+              tip: '连词 et（和）后面永远不联诵；嘘音 h 前禁止联诵；单数名词主语与后面的动词之间不联诵。',
+              examples: [
+                { w: 'et un', ipa: '/e œ̃/', zh: '和一个(et后不联)' },
+                { w: 'les héros', ipa: '/le e.ʁo/', zh: '英雄们(嘘音h不联)' }
+              ]
+            },
+            {
+              pattern: '省音 Élision (l’ / j’ / c’ / d’)',
+              ipa: '元音相碰省去前音',
+              tip: 'le, la, je, ne, de, ce, se 等小词遇到以元音或哑音 h 开头的词时，省去末尾的 e 或 a，改用省文撇号（’）直接连读。',
+              examples: [
+                { w: "j'habite", ipa: '/ʒa.bit/', zh: '我居住' },
+                { w: "l'ami", ipa: '/la.mi/', zh: '朋友' },
+                { w: "c'est", ipa: '/sɛ/', zh: '这是' },
+                { w: "d'accord", ipa: '/da.kɔʁ/', zh: '同意' }
+              ]
+            }
+          ]
+        }
+      ],
+
+      render() {
+        const container = document.getElementById('ph-rules-container');
+        if (!container) return;
+        const visibleSections =
+          this.activeCat === 'all' ? this.sections : this.sections.filter((s) => s.id === this.activeCat);
+
+        container.innerHTML = visibleSections
+          .map(
+            (sec) => `
+          <div class="ph-section">
+            <div class="ph-section-head">
+              <h3 class="ph-section-title">${escapeHtml(sec.title)}</h3>
+              <span class="ph-section-sub">${escapeHtml(sec.sub)}</span>
+            </div>
+            <div class="ph-card-grid">
+              ${sec.rules
+                .map(
+                  (r) => `
+                <article class="ph-card">
+                  <div class="ph-card-top">
+                    <span class="ph-pattern">${escapeHtml(r.pattern)}</span>
+                    <span class="ph-ipa-badge">${escapeHtml(r.ipa)}</span>
+                  </div>
+                  <p class="ph-tip">${escapeHtml(r.tip)}</p>
+                  ${r.warn ? `<div class="ph-warn">⚠️ ${escapeHtml(r.warn)}</div>` : ''}
+                  <div class="ph-examples">
+                    ${r.examples
+                      .map(
+                        (ex) => `
+                      <button type="button" class="ph-ex-btn" data-ph-speak="${escapeHtml(ex.w)}" title="点击朗读 ${escapeHtml(ex.w)}">
+                        <span>🔊</span>
+                        <span class="ph-ex-word">${escapeHtml(ex.w)}</span>
+                        <span class="ph-ex-ipa">${escapeHtml(ex.ipa)}</span>
+                        <span class="ph-ex-zh">${escapeHtml(ex.zh)}</span>
+                      </button>`
+                      )
+                      .join('')}
+                  </div>
+                </article>`
+                )
+                .join('')}
+            </div>
+          </div>`
+          )
+          .join('');
+      }
+    };
+
+    /* =========================================================================
      * 13.5 GitHub Gist 私有云同步与全量备份 (CloudSync)
      * ========================================================================= */
     const CloudSync = {
@@ -8840,6 +9434,24 @@
             GenderBlitz.next();
           }
         }
+      });
+
+      // --- Tab 6: 法语发音与拼读规则交互 ---
+      document.getElementById('ph-filter-pills').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-ph-cat]');
+        if (!btn) return;
+        PhoneticsGuide.activeCat = btn.dataset.phCat;
+        document.querySelectorAll('#ph-filter-pills .filter-pill').forEach((b) => {
+          b.classList.toggle('active', b.dataset.phCat === PhoneticsGuide.activeCat);
+        });
+        PhoneticsGuide.render();
+      });
+
+      document.getElementById('ph-rules-container').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-ph-speak]');
+        if (!btn) return;
+        const slow = document.getElementById('toggle-ph-slow').checked;
+        FrenchTTS.speak(btn.dataset.phSpeak, slow ? 0.65 : 1.0);
       });
 
       // --- GitHub Gist 云同步弹窗交互 ---
