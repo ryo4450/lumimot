@@ -3042,13 +3042,17 @@
     }
 
     @media (max-width: 768px) {
-      /* 顶部紧凑 App Bar */
+      /* 顶部紧凑 App Bar：关键！关闭 backdrop-filter，否则会让内部的 position:fixed 底部栏被困在顶栏里 */
       .app-header {
+        position: static;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        background: var(--bg-card);
         padding-top: env(safe-area-inset-top);
       }
 
       .header-inner {
-        padding: 10px 12px 9px;
+        padding: 10px 12px 10px;
         gap: 8px;
       }
 
@@ -3095,7 +3099,7 @@
       .scope-select {
         width: 100%;
         max-width: none;
-        font-size: 13px;
+        font-size: 13px !important;
       }
 
       .sync-trigger-btn {
@@ -3112,25 +3116,26 @@
         font-size: 11.5px;
       }
 
-      /* 原生 App 底部固定 6 栏导航栏 */
+      /* 原生 App 底部固定 6 栏导航栏（严格固定在屏幕最底部） */
       .nav-tabs {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        z-index: 60;
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        z-index: 90;
         width: 100%;
         margin: 0;
         padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
         border-radius: 0;
         border: 0;
         border-top: 1px solid var(--border);
-        background: rgba(251, 244, 227, 0.95);
+        background: rgba(251, 244, 227, 0.96);
         -webkit-backdrop-filter: blur(14px);
         backdrop-filter: blur(14px);
         box-shadow: 0 -4px 18px rgba(44, 36, 27, 0.08);
-        display: grid;
-        grid-template-columns: repeat(6, 1fr);
+        display: grid !important;
+        grid-template-columns: repeat(6, 1fr) !important;
         gap: 2px;
       }
 
@@ -3140,7 +3145,7 @@
         align-items: center;
         justify-content: center;
         gap: 2px;
-        padding: 6px 2px;
+        padding: 5px 2px;
         border-radius: 10px;
         min-height: 46px;
         font-size: 11px;
@@ -3165,15 +3170,42 @@
 
       /* 主内容留足底部导航栏安全距离 */
       .app-main {
-        padding: 12px 12px calc(86px + env(safe-area-inset-bottom));
+        padding: 10px 12px calc(88px + env(safe-area-inset-bottom));
       }
 
       .app-footer {
-        padding-bottom: calc(82px + env(safe-area-inset-bottom));
+        padding-bottom: calc(84px + env(safe-area-inset-bottom));
         font-size: 11.5px;
       }
 
-      /* 手机端背词工作台：核心背词卡置顶 -> 例句解析居中 -> 学习队列置底 */
+      /* 手机端工具条单行横向滑动，干净不占屏，让背词卡一打开就在首屏居中 */
+      .toolbar-row {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 8px;
+        padding-bottom: 4px;
+        margin-bottom: 10px;
+      }
+
+      .toolbar-row > * {
+        flex-shrink: 0;
+      }
+
+      .toolbar-row .switch-group,
+      .toolbar-row .badge-group,
+      .toolbar-row .toolbar-actions {
+        flex-wrap: nowrap;
+        gap: 6px;
+      }
+
+      .switch-label {
+        padding: 5px 9px;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+
+      /* 手机端背词工作台：核心背词卡置顶 (1) -> 例句与变位 (2) -> 学习队列 (3) */
       .fc-workspace {
         display: flex;
         flex-direction: column;
@@ -3182,9 +3214,10 @@
 
       .fc-primary-col {
         order: 1;
+        position: static;
       }
 
-      .fc-context-panel {
+      .fc-context-col {
         order: 2;
         position: static;
         max-height: none;
@@ -3196,8 +3229,12 @@
         max-height: none;
       }
 
-      .fc-card-body {
-        padding: 18px 16px 20px;
+      .fc-upper {
+        padding: 16px 16px 14px;
+      }
+
+      .fc-word-hero {
+        padding: 10px 0 6px;
       }
 
       .main-french-word {
@@ -3225,8 +3262,7 @@
       input[type="text"],
       input[type="password"],
       input[type="search"],
-      textarea,
-      select {
+      textarea {
         font-size: 16px !important;
       }
 

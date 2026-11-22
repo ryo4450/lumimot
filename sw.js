@@ -1,6 +1,6 @@
 'use strict';
 
-const CACHE_NAME = 'lumimot-v2-cache-1';
+const CACHE_NAME = 'lumimot-v2-cache-2';
 const APP_SHELL = [
   './',
   './index.html',
