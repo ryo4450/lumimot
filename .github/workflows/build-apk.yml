@@ -1,0 +1,80 @@
+name: Build LumiMot Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-android-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Prepare web assets & Capacitor project
+        run: |
+          mkdir -p www
+          cp index.html nihao_a1_data.js textbooks_data.js manifest.json sw.js icon-192.png icon-512.png www/ 2>/dev/null || true
+
+          cat << 'EOF' > package.json
+          {
+            "name": "lumimot-app",
+            "version": "2.0.0",
+            "private": true
+          }
+          EOF
+
+          cat << 'EOF' > capacitor.config.json
+          {
+            "appId": "com.lumimot.app",
+            "appName": "LumiMot",
+            "webDir": "www",
+            "android": {
+              "backgroundColor": "#F4E9D2"
+            }
+          }
+          EOF
+
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npx cap add android
+          npx cap sync android
+
+      - name: Apply LumiMot App Icon & Version
+        run: |
+          if [ -f icon-512.png ]; then
+            rm -rf android/app/src/main/res/mipmap-anydpi-v26
+            for dir in android/app/src/main/res/mipmap-*; do
+              if [ -d "$dir" ]; then
+                cp icon-512.png "$dir/ic_launcher.png"
+                cp icon-512.png "$dir/ic_launcher_round.png"
+              fi
+            done
+          fi
+          sed -i 's/versionName "1.0"/versionName "2.0"/' android/app/build.gradle || true
+
+      - name: Build Android APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/LumiMot-v2.0.apk
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: LumiMot-v2.0-APK
+          path: android/app/build/outputs/apk/debug/LumiMot-v2.0.apk
+          retention-days: 30
