@@ -5319,27 +5319,52 @@
       },
 
       speakOnlineAudio(cleanText, rate = 1.0) {
-        try {
-          if (this.audioEl) {
-            this.audioEl.pause();
-            this.audioEl.src = '';
-          }
-          const url = `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(cleanText)}&le=fr`;
-          const audio = new Audio(url);
-          audio.playbackRate = Math.max(0.5, Math.min(1.5, rate));
-          this.audioEl = audio;
-          const playPromise = audio.play();
-          if (playPromise && typeof playPromise.catch === 'function') {
-            playPromise.catch(() => {
-              this.speakNativeFallback(cleanText, rate);
-            });
-          }
-          audio.onerror = () => {
+        const enc = encodeURIComponent(cleanText);
+        const spd = rate < 0.85 ? 2 : 3;
+        const urls = [
+          `https://fanyi.baidu.com/gettts?lan=fra&text=${enc}&spd=${spd}&source=web`,
+          `https://dict.youdao.com/dictvoice?audio=${enc}&le=fr`,
+          `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=fr&q=${enc}`
+        ];
+
+        const tryNext = (idx) => {
+          if (idx >= urls.length) {
             this.speakNativeFallback(cleanText, rate);
-          };
-        } catch (err) {
-          this.speakNativeFallback(cleanText, rate);
-        }
+            return;
+          }
+          try {
+            if (this.audioEl) {
+              this.audioEl.onended = null;
+              this.audioEl.onerror = null;
+              this.audioEl.pause();
+            }
+            const audio = new Audio(urls[idx]);
+            audio.referrerPolicy = 'no-referrer';
+            if (idx !== 0) {
+              audio.playbackRate = Math.max(0.5, Math.min(1.5, rate));
+            }
+            this.audioEl = audio;
+            let moved = false;
+            const fallback = () => {
+              if (moved || this.audioEl !== audio) return;
+              moved = true;
+              tryNext(idx + 1);
+            };
+            audio.onerror = fallback;
+            const playPromise = audio.play();
+            if (playPromise && typeof playPromise.catch === 'function') {
+              playPromise.catch((err) => {
+                // 首次打开页面未点击屏幕时，自动朗读可能被系统策略拦截，静默跳过不弹报错条
+                if (err && err.name === 'NotAllowedError') return;
+                fallback();
+              });
+            }
+          } catch (_) {
+            tryNext(idx + 1);
+          }
+        };
+
+        tryNext(0);
       },
 
       speakNativeFallback(cleanText, rate = 1.0) {
