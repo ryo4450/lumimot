@@ -5282,13 +5282,11 @@
     const FrenchTTS = {
       supported: typeof window !== 'undefined' && 'speechSynthesis' in window,
       voice: null,
+      audioEl: null,
       dismissed: false,
 
       init() {
-        if (!this.supported) {
-          this.showBanner('当前浏览器不支持 Web Speech API，朗读功能不可用。建议使用 Chrome、Edge 或 Safari。');
-          return;
-        }
+        if (!this.supported) return;
         const pick = () => {
           try {
             const list = window.speechSynthesis.getVoices() || [];
@@ -5296,7 +5294,6 @@
             const frList = list.filter((v) => v.lang && v.lang.toLowerCase().startsWith('fr'));
             if (!frList.length) {
               this.voice = null;
-              this.showBanner('未检测到系统内置法语语音包（fr-FR），朗读可能受限，但其余功能均可正常使用。');
               return;
             }
             this.voice =
@@ -5314,28 +5311,89 @@
         }
       },
 
-      speak(text, rate = 1.0) {
-        if (!this.supported || !text) return;
+      cleanTextForSpeech(text) {
+        return String(text || '')
+          .replace(/\s*\([^)]*\)/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
+      },
+
+      speakOnlineAudio(cleanText, rate = 1.0) {
         try {
-          window.speechSynthesis.cancel();
-          const utter = new SpeechSynthesisUtterance(text);
-          utter.lang = 'fr-FR';
-          utter.rate = rate;
-          if (this.voice) utter.voice = this.voice;
-          utter.onerror = (e) => {
-            if (e.error !== 'canceled' && e.error !== 'interrupted') {
-              this.showBanner('法语语音播放受限，请确认设备已开启音量或系统已安装法语语音包。');
-            }
+          if (this.audioEl) {
+            this.audioEl.pause();
+            this.audioEl.src = '';
+          }
+          const url = `https://dict.youdao.com/dictvoice?audio=${encodeURIComponent(cleanText)}&le=fr`;
+          const audio = new Audio(url);
+          audio.playbackRate = Math.max(0.5, Math.min(1.5, rate));
+          this.audioEl = audio;
+          const playPromise = audio.play();
+          if (playPromise && typeof playPromise.catch === 'function') {
+            playPromise.catch(() => {
+              this.speakNativeFallback(cleanText, rate);
+            });
+          }
+          audio.onerror = () => {
+            this.speakNativeFallback(cleanText, rate);
           };
-          window.speechSynthesis.speak(utter);
         } catch (err) {
-          console.warn('TTS 朗读失败:', err);
+          this.speakNativeFallback(cleanText, rate);
         }
+      },
+
+      speakNativeFallback(cleanText, rate = 1.0) {
+        const capTts = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech;
+        if (capTts && typeof capTts.speak === 'function') {
+          capTts.speak({ text: cleanText, lang: 'fr-FR', rate }).catch(() => {
+            this.showBanner('当前离线且未检测到系统法语语音包，联网后即可自动使用云端法语发音。');
+          });
+          return;
+        }
+        this.showBanner('法语语音播放受限，请检查设备音量或网络连接。');
+      },
+
+      speak(text, rate = 1.0) {
+        const cleanText = this.cleanTextForSpeech(text);
+        if (!cleanText) return;
+        this.stop();
+
+        // 优先 1：如果浏览器/系统本身带有法语语音包（桌面 Chrome/Edge/Safari），直接离线朗读
+        if (this.supported && this.voice) {
+          try {
+            const utter = new SpeechSynthesisUtterance(cleanText);
+            utter.lang = 'fr-FR';
+            utter.rate = rate;
+            utter.voice = this.voice;
+            utter.onerror = (e) => {
+              if (e.error !== 'canceled' && e.error !== 'interrupted') {
+                this.speakOnlineAudio(cleanText, rate);
+              }
+            };
+            window.speechSynthesis.speak(utter);
+            return;
+          } catch (err) {
+            console.warn('Web Speech 失败，自动切换云端法语发音:', err);
+          }
+        }
+
+        // 优先 2：Android App (WebView) 或无系统法语语音包时，自动使用在线高清法语发音，失败再回退原生 TTS
+        this.speakOnlineAudio(cleanText, rate);
       },
 
       stop() {
         if (this.supported) {
           try { window.speechSynthesis.cancel(); } catch (_) {}
+        }
+        if (this.audioEl) {
+          try {
+            this.audioEl.pause();
+            this.audioEl.currentTime = 0;
+          } catch (_) {}
+        }
+        const capTts = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech;
+        if (capTts && typeof capTts.stop === 'function') {
+          capTts.stop().catch(() => {});
         }
       },
 
