@@ -2737,6 +2737,114 @@
         padding: 16px 14px;
       }
     }
+
+    /* ==================== 云同步按钮与弹窗样式 ==================== */
+    .sync-trigger-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 36px;
+      padding: 0 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--ink-800);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .sync-trigger-btn:hover {
+      background: var(--bg-page);
+      border-color: var(--ink-400);
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9CA3AF;
+      flex-shrink: 0;
+    }
+
+    .sync-dot.is-ok { background: #16A34A; }
+    .sync-dot.is-syncing {
+      background: #D97706;
+      animation: syncPulse 1s ease-in-out infinite;
+    }
+    .sync-dot.is-err { background: #DC2626; }
+
+    @keyframes syncPulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.82); }
+    }
+
+    .sync-status-card {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--bg-page);
+      border: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .sync-status-main {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink-900);
+    }
+
+    .sync-status-sub {
+      font-size: 12px;
+      color: var(--ink-500);
+      font-weight: 500;
+    }
+
+    .sync-guide-box {
+      margin-top: 12px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--bg-page);
+      border: 1px dashed var(--border);
+      font-size: 12.5px;
+      color: var(--ink-600);
+      line-height: 1.65;
+    }
+
+    .sync-guide-box a {
+      color: var(--masc);
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    .sync-token-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .sync-token-row .form-input {
+      flex: 1;
+    }
+
+    .sync-backup-row {
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-soft);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
   </style>
 </head>
 <body>
@@ -2777,6 +2885,10 @@
             <label for="global-lesson-select" class="scope-label">课次</label>
             <select id="global-lesson-select" class="scope-select" aria-label="筛选当前课次或单元"></select>
           </div>
+          <button id="btn-open-sync" class="sync-trigger-btn" type="button" title="GitHub Gist 跨设备云同步">
+            <span id="sync-status-dot" class="sync-dot"></span>
+            <span id="sync-status-label">云同步</span>
+          </button>
         </div>
       </div>
 
@@ -3767,6 +3879,69 @@
       <div class="modal-footer">
         <button class="btn btn-soft" data-close-modal="modal-confirm" type="button">取消</button>
         <button id="btn-confirm-ok" class="btn btn-danger" type="button">确认删除</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 弹窗 4：GitHub Gist 私有云同步 ==================== -->
+  <div id="modal-sync" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-sync-title">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <h3 id="modal-sync-title" class="modal-title">☁ GitHub Gist 私有云同步</h3>
+        <button class="modal-close" data-close-modal="modal-sync" type="button" aria-label="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="sync-status-card">
+          <div>
+            <div class="sync-status-main">
+              <span id="sync-modal-dot" class="sync-dot"></span>
+              <span id="sync-modal-state">尚未配置云同步</span>
+            </div>
+            <div id="sync-modal-meta" class="sync-status-sub" style="margin-top: 3px;">配置 Token 后即可在手机与电脑间自动同步背词进度、记忆曲线与笔记</div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="input-sync-token">GitHub Personal Access Token（仅需 <code>gist</code> 权限）</label>
+          <div class="sync-token-row">
+            <input id="input-sync-token" class="form-input" type="password" placeholder="粘贴 ghp_... 或 github_pat_..." autocomplete="off" />
+            <button id="btn-sync-toggle-vis" class="btn btn-soft btn-sm" type="button">显示</button>
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top: 12px;">
+          <label class="form-label" for="input-sync-gist-id">私有 Gist ID（留空即可，首次同步会自动创建或自动识别）</label>
+          <input id="input-sync-gist-id" class="form-input" type="text" placeholder="留空自动匹配；更换新设备时只需填上方 Token 即可" autocomplete="off" />
+        </div>
+
+        <label class="switch-label" style="margin-top: 10px;">
+          <input id="toggle-sync-auto" class="switch-input" type="checkbox" checked />
+          <span>开启自动同步（打开页面自动拉取合并，背词后自动保存至云端）</span>
+        </label>
+
+        <div id="sync-feedback" class="feedback-box hidden" style="margin-top: 12px;"></div>
+
+        <div class="sync-guide-box">
+          <strong>3 步获取免费同步密钥（只需操作 1 次）：</strong><br />
+          1. 点击直达链接：<a href="https://github.com/settings/tokens/new?scopes=gist&description=LumiMot%20Sync" target="_blank" rel="noopener noreferrer">生成 GitHub Gist Token ↗</a>（已自动勾选 <code>gist</code> 权限）。<br />
+          2. <strong>Expiration</strong> 建议选 <em>No expiration</em>（永不过期）或 90 天，拉到底部点绿色 <strong>Generate token</strong>。<br />
+          3. 复制生成的 <code>ghp_...</code> 密钥，分别粘贴到电脑和手机的 LumiMot 里，点<strong>「保存并立即同步」</strong>即可！<br />
+          <span style="color: var(--ink-500);">安全说明：密钥仅保存在你自己的设备浏览器本地，数据存放在你自己的 GitHub 私有 Gist 中。</span>
+        </div>
+
+        <div class="sync-backup-row">
+          <span style="font-size: 12.5px; color: var(--ink-500); font-weight: 600;">离线全量进度备份（含记忆曲线与笔记）：</span>
+          <div style="display: flex; gap: 8px;">
+            <button id="btn-backup-export" class="btn btn-soft btn-sm" type="button">导出全量存档</button>
+            <button id="btn-backup-import" class="btn btn-soft btn-sm" type="button">导入恢复存档</button>
+            <input id="input-backup-file" type="file" accept=".json,application/json" class="hidden" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="btn-sync-disconnect" class="btn btn-soft" type="button" style="margin-right: auto;">断开连接</button>
+        <button class="btn btn-soft" data-close-modal="modal-sync" type="button">关闭</button>
+        <button id="btn-sync-now" class="btn btn-primary" type="button">保存并立即同步</button>
       </div>
     </div>
   </div>
@@ -4936,11 +5111,14 @@
         this.save();
       },
 
-      save() {
+      save(skipAutoSync = false) {
         try {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(this.data));
         } catch (err) {
           console.warn('写入 localStorage 失败:', err);
+        }
+        if (!skipAutoSync && typeof CloudSync !== 'undefined') {
+          CloudSync.scheduleAutoSync();
         }
       },
 
@@ -7399,10 +7577,396 @@
     }
 
     function isAnyModalOpen() {
-      return ['modal-book', 'modal-words', 'modal-confirm'].some(
+      return ['modal-book', 'modal-words', 'modal-confirm', 'modal-sync'].some(
         (id) => !document.getElementById(id).classList.contains('hidden')
       );
     }
+
+    /* =========================================================================
+     * 13.5 GitHub Gist 私有云同步与全量备份 (CloudSync)
+     * ========================================================================= */
+    const CloudSync = {
+      CFG_KEY: 'lumimot_gist_sync_cfg_v1',
+      GIST_FILENAME: 'lumimot_sync_v2.json',
+      cfg: { token: '', gistId: '', autoSync: true, lastSyncedAt: 0 },
+      syncing: false,
+      autoTimer: null,
+
+      loadConfig() {
+        try {
+          const raw = localStorage.getItem(this.CFG_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            this.cfg = {
+              token: String(parsed.token || '').trim(),
+              gistId: String(parsed.gistId || '').trim(),
+              autoSync: parsed.autoSync !== false,
+              lastSyncedAt: Number(parsed.lastSyncedAt) || 0
+            };
+          }
+        } catch (err) {
+          console.warn('读取同步配置失败:', err);
+        }
+        this.updateUI('idle');
+      },
+
+      saveConfig() {
+        try {
+          localStorage.setItem(this.CFG_KEY, JSON.stringify(this.cfg));
+        } catch (err) {
+          console.warn('保存同步配置失败:', err);
+        }
+      },
+
+      formatTime(ts) {
+        if (!ts) return '尚未同步';
+        const d = new Date(ts);
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+      },
+
+      updateUI(state, customMsg) {
+        const dot = document.getElementById('sync-status-dot');
+        const label = document.getElementById('sync-status-label');
+        const mDot = document.getElementById('sync-modal-dot');
+        const mState = document.getElementById('sync-modal-state');
+        const mMeta = document.getElementById('sync-modal-meta');
+        const btnNow = document.getElementById('btn-sync-now');
+
+        const configured = Boolean(this.cfg.token);
+        let dotClass = 'sync-dot';
+        let labelText = '云同步';
+        let stateText = configured ? '已配置云同步' : '尚未配置云同步';
+        let metaText = configured
+          ? `上次同步：${this.formatTime(this.cfg.lastSyncedAt)}${this.cfg.gistId ? ' · Gist: ' + this.cfg.gistId.slice(0, 8) + '…' : ''}`
+          : '配置 Token 后即可在手机与电脑间自动同步背词进度、记忆曲线与笔记';
+
+        if (state === 'syncing') {
+          dotClass = 'sync-dot is-syncing';
+          labelText = '同步中…';
+          stateText = '正在与 GitHub 云端同步…';
+        } else if (state === 'ok') {
+          dotClass = 'sync-dot is-ok';
+          labelText = '已同步';
+          stateText = '云端同步成功';
+        } else if (state === 'err') {
+          dotClass = 'sync-dot is-err';
+          labelText = '同步异常';
+          stateText = customMsg || '同步失败，请检查网络或 Token 权限';
+        } else if (configured && this.cfg.lastSyncedAt) {
+          dotClass = 'sync-dot is-ok';
+          labelText = '已同步';
+        }
+
+        if (dot) dot.className = dotClass;
+        if (label) label.textContent = labelText;
+        if (mDot) mDot.className = dotClass;
+        if (mState) mState.textContent = stateText;
+        if (mMeta) mMeta.textContent = metaText;
+        if (btnNow) btnNow.disabled = state === 'syncing';
+      },
+
+      showFeedback(type, msg) {
+        const fb = document.getElementById('sync-feedback');
+        if (!fb) return;
+        if (!msg) {
+          fb.classList.add('hidden');
+          return;
+        }
+        fb.className = `feedback-box feedback-${type}`;
+        fb.textContent = msg;
+        fb.classList.remove('hidden');
+      },
+
+      openModal() {
+        document.getElementById('input-sync-token').value = this.cfg.token || '';
+        document.getElementById('input-sync-token').type = 'password';
+        document.getElementById('btn-sync-toggle-vis').textContent = '显示';
+        document.getElementById('input-sync-gist-id').value = this.cfg.gistId || '';
+        document.getElementById('toggle-sync-auto').checked = this.cfg.autoSync !== false;
+        this.showFeedback('', '');
+        this.updateUI('idle');
+        document.getElementById('modal-sync').classList.remove('hidden');
+      },
+
+      buildPayload() {
+        const builtInBookIds = new Set(DEFAULT_BOOKS.filter((b) => b.isBuiltIn).map((b) => b.id));
+        const builtInWordIds = new Set(DEFAULT_WORDS.map((w) => w.id));
+        const customBooks = Store.data.books.filter((b) => !builtInBookIds.has(b.id));
+        const customWords = Store.data.words.filter((w) => !builtInWordIds.has(w.id));
+        return {
+          app: 'LumiMot',
+          schema: 2,
+          updatedAt: Date.now(),
+          progress: Store.data.progress || {},
+          notes: Store.data.notes || {},
+          customBooks,
+          customWords,
+          meta: {
+            activeBookId: Store.data.meta.activeBookId,
+            activeLesson: Store.data.meta.activeLesson,
+            bestGenderStreak: Store.data.meta.bestGenderStreak || 0,
+            lastLessonByBook: Store.data.meta.lastLessonByBook || {},
+            dailyHistory: Store.data.meta.dailyHistory || {}
+          }
+        };
+      },
+
+      applyMergedPayload(remote) {
+        if (!remote || typeof remote !== 'object') return false;
+        let changed = false;
+
+        // 1. 智能合并学习进度（按最后复习时间较新优先，同时间取复习次数较高者）
+        const rProg = remote.progress && typeof remote.progress === 'object' ? remote.progress : {};
+        Object.keys(rProg).forEach((wid) => {
+          const rp = SRS.normalize(rProg[wid]);
+          const lp = Store.data.progress[wid] ? SRS.normalize(Store.data.progress[wid]) : null;
+          if (!lp) {
+            Store.data.progress[wid] = rp;
+            changed = true;
+            return;
+          }
+          const rTime = Number(rp.lastReviewedAt) || 0;
+          const lTime = Number(lp.lastReviewedAt) || 0;
+          const rScore = (rp.totalReviews || 0) + (rp.status === 'mastered' ? 2 : rp.status === 'learning' ? 1 : 0);
+          const lScore = (lp.totalReviews || 0) + (lp.status === 'mastered' ? 2 : lp.status === 'learning' ? 1 : 0);
+          if (rTime > lTime || (rTime === lTime && rScore > lScore)) {
+            Store.data.progress[wid] = rp;
+            changed = true;
+          }
+        });
+
+        // 2. 合并自定义笔记
+        const rNotes = remote.notes && typeof remote.notes === 'object' ? remote.notes : {};
+        Object.keys(rNotes).forEach((wid) => {
+          const rVal = String(rNotes[wid] || '').trim();
+          const lVal = String((Store.data.notes && Store.data.notes[wid]) || '').trim();
+          if (rVal && !lVal) {
+            Store.data.notes[wid] = rVal;
+            changed = true;
+          }
+        });
+
+        // 3. 合并自定义词书与自定义词条
+        if (Array.isArray(remote.customBooks)) {
+          const bookIds = new Set(Store.data.books.map((b) => b.id));
+          remote.customBooks.forEach((b) => {
+            if (b && b.id && !bookIds.has(b.id)) {
+              Store.data.books.push(b);
+              bookIds.add(b.id);
+              changed = true;
+            }
+          });
+        }
+        if (Array.isArray(remote.customWords)) {
+          const wordIds = new Set(Store.data.words.map((w) => w.id));
+          remote.customWords.forEach((w) => {
+            if (w && w.id && !wordIds.has(w.id)) {
+              Store.data.words.push(w);
+              wordIds.add(w.id);
+              changed = true;
+            }
+          });
+        }
+
+        // 4. 合并每日学习记录与最高连击
+        if (remote.meta && typeof remote.meta === 'object') {
+          const rStreak = Number(remote.meta.bestGenderStreak) || 0;
+          if (rStreak > (Store.data.meta.bestGenderStreak || 0)) {
+            Store.data.meta.bestGenderStreak = rStreak;
+            changed = true;
+          }
+          const rHist = remote.meta.dailyHistory && typeof remote.meta.dailyHistory === 'object' ? remote.meta.dailyHistory : {};
+          if (!Store.data.meta.dailyHistory) Store.data.meta.dailyHistory = {};
+          Object.keys(rHist).forEach((day) => {
+            const rv = Number(rHist[day]) || 0;
+            const lv = Number(Store.data.meta.dailyHistory[day]) || 0;
+            if (rv > lv) {
+              Store.data.meta.dailyHistory[day] = rv;
+              changed = true;
+            }
+          });
+        }
+
+        if (changed) {
+          Store.save(true);
+          onScopeChanged(false);
+          if (Runtime.activeTab === 'memory') MemoryCurve.render();
+          if (Runtime.activeTab === 'books') WordbookManager.renderAll();
+        }
+        return changed;
+      },
+
+      async githubFetch(url, options = {}) {
+        const res = await fetch(url, {
+          ...options,
+          headers: {
+            Accept: 'application/vnd.github+json',
+            Authorization: `Bearer ${this.cfg.token}`,
+            'Content-Type': 'application/json',
+            ...(options.headers || {})
+          }
+        });
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '');
+          if (res.status === 401) throw new Error('Token 无效或已过期（401），请重新生成带 gist 权限的 Token');
+          if (res.status === 403) throw new Error('Token 缺少 gist 权限或触发限流（403）');
+          if (res.status === 404) throw new Error('未找到对应的 Gist（404），可清空 Gist ID 后重试');
+          throw new Error(`GitHub 请求失败 (${res.status}) ${errText.slice(0, 80)}`);
+        }
+        return res.json();
+      },
+
+      async findExistingGist() {
+        const list = await this.githubFetch('https://api.github.com/gists?per_page=100');
+        if (!Array.isArray(list)) return null;
+        return list.find((g) => g && g.files && Object.prototype.hasOwnProperty.call(g.files, this.GIST_FILENAME)) || null;
+      },
+
+      async syncNow({ silent = false } = {}) {
+        if (this.syncing) return;
+        if (!this.cfg.token) {
+          if (!silent) this.showFeedback('err', '请先粘贴 GitHub Token（需勾选 gist 权限）。');
+          return;
+        }
+        this.syncing = true;
+        this.updateUI('syncing');
+        if (!silent) this.showFeedback('info', '正在连接 GitHub Gist 进行双向合并…');
+
+        try {
+          let gistData = null;
+
+          // 1. 定位或自动发现私有 Gist
+          if (this.cfg.gistId) {
+            gistData = await this.githubFetch(`https://api.github.com/gists/${encodeURIComponent(this.cfg.gistId)}`);
+          } else {
+            const found = await this.findExistingGist();
+            if (found) {
+              this.cfg.gistId = found.id;
+              gistData = await this.githubFetch(`https://api.github.com/gists/${encodeURIComponent(found.id)}`);
+            }
+          }
+
+          // 2. 拉取并智能合并云端进度
+          if (gistData && gistData.files && gistData.files[this.GIST_FILENAME]) {
+            const fileObj = gistData.files[this.GIST_FILENAME];
+            let contentStr = fileObj.content || '';
+            if (fileObj.truncated && fileObj.raw_url) {
+              const rawRes = await fetch(fileObj.raw_url);
+              contentStr = await rawRes.text();
+            }
+            if (contentStr.trim()) {
+              try {
+                const remotePayload = JSON.parse(contentStr);
+                this.applyMergedPayload(remotePayload);
+              } catch (parseErr) {
+                console.warn('云端 JSON 解析跳过:', parseErr);
+              }
+            }
+          }
+
+          // 3. 将合并后的最新进度写回私有 Gist
+          const mergedPayload = this.buildPayload();
+          const body = JSON.stringify({
+            description: 'LumiMot 法语背词云同步存档（私有，请勿手动修改）',
+            public: false,
+            files: {
+              [this.GIST_FILENAME]: {
+                content: JSON.stringify(mergedPayload)
+              }
+            }
+          });
+
+          if (this.cfg.gistId) {
+            await this.githubFetch(`https://api.github.com/gists/${encodeURIComponent(this.cfg.gistId)}`, {
+              method: 'PATCH',
+              body
+            });
+          } else {
+            const created = await this.githubFetch('https://api.github.com/gists', {
+              method: 'POST',
+              body
+            });
+            this.cfg.gistId = created.id;
+          }
+
+          this.cfg.lastSyncedAt = Date.now();
+          this.saveConfig();
+          const gistInput = document.getElementById('input-sync-gist-id');
+          if (gistInput) gistInput.value = this.cfg.gistId;
+
+          this.updateUI('ok');
+          if (!silent) {
+            this.showFeedback('ok', `✅ 双向同步完成！当前已同步 ${Object.keys(Store.data.progress).length} 条背词记录。`);
+            showToast('云端进度同步成功！');
+          }
+        } catch (err) {
+          console.error('云同步失败:', err);
+          this.updateUI('err', err.message || '同步失败');
+          if (!silent) {
+            this.showFeedback('err', `同步失败：${err.message || '请检查网络或 Token'}`);
+          }
+        } finally {
+          this.syncing = false;
+        }
+      },
+
+      scheduleAutoSync() {
+        if (!this.cfg.token || !this.cfg.autoSync) return;
+        if (this.autoTimer) clearTimeout(this.autoTimer);
+        this.autoTimer = setTimeout(() => {
+          this.autoTimer = null;
+          this.syncNow({ silent: true });
+        }, 6000);
+      },
+
+      disconnect() {
+        if (this.autoTimer) clearTimeout(this.autoTimer);
+        this.cfg = { token: '', gistId: '', autoSync: true, lastSyncedAt: 0 };
+        this.saveConfig();
+        document.getElementById('input-sync-token').value = '';
+        document.getElementById('input-sync-gist-id').value = '';
+        this.updateUI('idle');
+        this.showFeedback('info', '已断开本设备的云同步连接（本地进度不受影响）。');
+        showToast('已断开云同步');
+      },
+
+      exportFullBackup() {
+        const payload = this.buildPayload();
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        const d = new Date();
+        const tag = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`;
+        a.href = url;
+        a.download = `lumimot_backup_${tag}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast('已导出完整学习进度备份！');
+      },
+
+      importFullBackupFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const parsed = JSON.parse(String(reader.result || ''));
+            if (!parsed || typeof parsed !== 'object' || !parsed.progress) {
+              this.showFeedback('err', '文件格式不正确，请选择 LumiMot 导出的全量备份 JSON。');
+              return;
+            }
+            this.applyMergedPayload(parsed);
+            this.showFeedback('ok', '✅ 已成功导入并合并学习进度！');
+            showToast('学习进度已恢复！');
+          } catch (err) {
+            this.showFeedback('err', 'JSON 解析失败：' + err.message);
+          }
+        };
+        reader.readAsText(file, 'utf-8');
+      }
+    };
 
     /* =========================================================================
      * 14. 全局事件绑定与初始化启动
@@ -7927,6 +8491,43 @@
           }
         }
       });
+
+      // --- GitHub Gist 云同步弹窗交互 ---
+      document.getElementById('btn-open-sync').addEventListener('click', () => CloudSync.openModal());
+
+      document.getElementById('btn-sync-toggle-vis').addEventListener('click', () => {
+        const input = document.getElementById('input-sync-token');
+        const btn = document.getElementById('btn-sync-toggle-vis');
+        const isPwd = input.type === 'password';
+        input.type = isPwd ? 'text' : 'password';
+        btn.textContent = isPwd ? '隐藏' : '显示';
+      });
+
+      document.getElementById('btn-sync-now').addEventListener('click', () => {
+        CloudSync.cfg.token = document.getElementById('input-sync-token').value.trim();
+        CloudSync.cfg.gistId = document.getElementById('input-sync-gist-id').value.trim();
+        CloudSync.cfg.autoSync = document.getElementById('toggle-sync-auto').checked;
+        CloudSync.saveConfig();
+        CloudSync.syncNow({ silent: false });
+      });
+
+      document.getElementById('toggle-sync-auto').addEventListener('change', (e) => {
+        CloudSync.cfg.autoSync = e.target.checked;
+        CloudSync.saveConfig();
+      });
+
+      document.getElementById('btn-sync-disconnect').addEventListener('click', () => CloudSync.disconnect());
+
+      document.getElementById('btn-backup-export').addEventListener('click', () => CloudSync.exportFullBackup());
+      document.getElementById('btn-backup-import').addEventListener('click', () => {
+        const fileInput = document.getElementById('input-backup-file');
+        fileInput.value = '';
+        fileInput.click();
+      });
+      document.getElementById('input-backup-file').addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (file) CloudSync.importFullBackupFile(file);
+      });
     }
 
     // 应用启动
@@ -7937,7 +8538,11 @@
       FrenchTTS.init();
       bindEvents();
       Flashcards.syncQueueCollapseUI();
+      CloudSync.loadConfig();
       onScopeChanged(true);
+      if (CloudSync.cfg.token && CloudSync.cfg.autoSync) {
+        CloudSync.syncNow({ silent: true });
+      }
     }
 
     if (document.readyState === 'loading') {
