@@ -3206,8 +3206,11 @@
     <section id="panel-gender" class="hidden">
       <div class="toolbar-row">
         <div class="badge-group">
+          <span class="badge badge-lesson">仅测验已背名词</span>
           <span id="gd-streak-pill" class="streak-pill">🔥 连对 0 题</span>
           <span id="gd-best-pill" class="badge badge-neutral">最高记录：0</span>
+          <span id="gd-wrong-pill" class="badge badge-f">错误 0 题</span>
+          <button id="btn-gd-wrong-only" class="btn btn-soft btn-sm hidden" type="button">仅练错词 (0)</button>
         </div>
         <label class="switch-label">
           <input id="toggle-gd-auto" class="switch-input green" type="checkbox" checked />
@@ -3265,15 +3268,25 @@
 
         <aside class="side-guide-card" aria-label="法语阴阳性词尾速查">
           <h3 class="side-guide-title">🧭 阴阳性训练看板</h3>
-          <div class="side-metric-grid">
+          <div class="side-metric-grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="side-metric-box">
               <div id="gd-side-total" class="side-metric-val">0</div>
-              <div class="side-metric-lbl">当前范围名词</div>
+              <div class="side-metric-lbl">已背名词</div>
             </div>
             <div class="side-metric-box">
-              <div id="gd-side-best" class="side-metric-val">0</div>
-              <div class="side-metric-lbl">历史最高连对</div>
+              <div id="gd-side-best" class="side-metric-val" style="color: var(--verb);">0</div>
+              <div class="side-metric-lbl">最高连对</div>
             </div>
+            <div class="side-metric-box">
+              <div id="gd-side-wrong" class="side-metric-val" style="color: var(--fem);">0</div>
+              <div class="side-metric-lbl">历史错误</div>
+            </div>
+          </div>
+          <div class="cheat-item" style="margin-top: 2px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px;">
+              <strong style="margin: 0;">📌 阴阳性错词复习组 (<span id="gd-wrong-group-count">0</span>)</strong>
+            </div>
+            <div id="gd-wrong-list" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; color: var(--ink-500);">暂无错词，继续保持！</div>
           </div>
           <div class="cheat-list">
             <div class="cheat-item is-m">
@@ -3294,11 +3307,11 @@
 
       <div id="gd-empty-view" class="empty-card hidden">
         <div class="empty-icon">🧭</div>
-        <h2 class="empty-title">当前范围没有可刷的阴阳名词</h2>
-        <p class="empty-desc">阴阳性快刷仅筛选标记为阳性 (m.) 或阴性 (f.) 的名词。可将顶部课次切为「全部课次」，或录入更多名词。</p>
+        <h2 class="empty-title">当前范围还没有背过的阴阳名词</h2>
+        <p class="empty-desc">阴阳性快刷仅从「已背过」且标注为阳性 (m.) 或阴性 (f.) 的名词中出题，不会抽考未学过的生词。先去背词卡片背诵几个名词吧！</p>
         <div class="empty-actions">
-          <button id="btn-gd-all-lessons" class="btn btn-primary" type="button">查看当前词书全部课次</button>
-          <button id="btn-gd-goto-books" class="btn btn-outline" type="button">去词书管理录入名词</button>
+          <button id="btn-gd-goto-books" class="btn btn-primary" type="button">去背词卡片开始背诵</button>
+          <button id="btn-gd-all-lessons" class="btn btn-outline" type="button">查看当前词书全部课次</button>
         </div>
       </div>
     </section>
@@ -5086,6 +5099,11 @@
                     wrongCount: Number(parsed.meta?.spelling?.wrongCount) || 0,
                     wrongIds: Array.isArray(parsed.meta?.spelling?.wrongIds) ? [...new Set(parsed.meta.spelling.wrongIds)] : [],
                     updatedAt: Number(parsed.meta?.spelling?.updatedAt) || 0
+                  },
+                  gender: {
+                    wrongCount: Number(parsed.meta?.gender?.wrongCount) || 0,
+                    wrongIds: Array.isArray(parsed.meta?.gender?.wrongIds) ? [...new Set(parsed.meta.gender.wrongIds)] : [],
+                    updatedAt: Number(parsed.meta?.gender?.updatedAt) || 0
                   }
                 }
               };
@@ -5125,6 +5143,11 @@
             dailyHistory: {},
             spelling: {
               correctCount: 0,
+              wrongCount: 0,
+              wrongIds: [],
+              updatedAt: 0
+            },
+            gender: {
               wrongCount: 0,
               wrongIds: [],
               updatedAt: 0
@@ -5294,7 +5317,8 @@
         index: 0,
         streak: 0,
         answered: false,
-        autoTimer: null
+        autoTimer: null,
+        wrongOnly: false
       },
 
       sp: {
@@ -5423,8 +5447,10 @@
         WordbookManager.renderAll();
       } else if (tab === 'memory') {
         MemoryCurve.render();
+      } else if (tab === 'gender') {
+        GenderBlitz.init();
       } else if (tab === 'spelling') {
-        SpellingQuiz.reconcileAndRender();
+        SpellingQuiz.init();
         const spInput = document.getElementById('sp-input');
         if (!document.getElementById('sp-active-view').classList.contains('hidden')) {
           setTimeout(() => spInput.focus(), 40);
@@ -6011,9 +6037,47 @@
      * 8. Tab 2: 阴阳性快刷模块 (Gender Drill)
      * ========================================================================= */
     const GenderBlitz = {
+      getGenderMeta() {
+        if (!Store.data.meta.gender || typeof Store.data.meta.gender !== 'object') {
+          Store.data.meta.gender = { wrongCount: 0, wrongIds: [], updatedAt: 0 };
+        }
+        if (!Array.isArray(Store.data.meta.gender.wrongIds)) {
+          Store.data.meta.gender.wrongIds = [];
+        }
+        return Store.data.meta.gender;
+      },
+
+      /** 仅获取当前范围内已经背过的阴阳名词 */
+      getStudiedNouns() {
+        return Store.getScopedWords().filter((w) => {
+          if (w.gender !== 'm' && w.gender !== 'f') return false;
+          const p = Store.getProgress(w.id);
+          return p.status !== 'new' || p.reviewCount > 0 || p.lapses > 0 || p.lastReviewedAt > 0;
+        });
+      },
+
+      getScopedWrongNouns() {
+        const gdMeta = this.getGenderMeta();
+        const wrongSet = new Set(gdMeta.wrongIds);
+        return this.getStudiedNouns().filter((w) => wrongSet.has(w.id));
+      },
+
+      /** 构建出题队列：历史错词优先排在最前面复习 */
+      buildPriorityQueue() {
+        const studied = this.getStudiedNouns();
+        const gdMeta = this.getGenderMeta();
+        const wrongSet = new Set(gdMeta.wrongIds);
+        const wrongPool = studied.filter((w) => wrongSet.has(w.id));
+        if (Runtime.gd.wrongOnly) {
+          if (wrongPool.length > 0) return shuffle(wrongPool.map((w) => w.id));
+          Runtime.gd.wrongOnly = false;
+        }
+        const restPool = studied.filter((w) => !wrongSet.has(w.id));
+        return [...shuffle(wrongPool.map((w) => w.id)), ...shuffle(restPool.map((w) => w.id))];
+      },
+
       init() {
-        const nouns = Store.getScopedWords().filter((w) => w.gender === 'm' || w.gender === 'f');
-        Runtime.gd.nounIds = shuffle(nouns.map((w) => w.id));
+        Runtime.gd.nounIds = this.buildPriorityQueue();
         Runtime.gd.index = 0;
         Runtime.gd.streak = 0;
         Runtime.gd.answered = false;
@@ -6021,13 +6085,9 @@
       },
 
       reconcileAndRender() {
-        const validNouns = new Set(
-          Store.getScopedWords()
-            .filter((w) => w.gender === 'm' || w.gender === 'f')
-            .map((w) => w.id)
-        );
-        Runtime.gd.nounIds = Runtime.gd.nounIds.filter((id) => validNouns.has(id));
-        validNouns.forEach((id) => {
+        const validSet = new Set(this.buildPriorityQueue());
+        Runtime.gd.nounIds = Runtime.gd.nounIds.filter((id) => validSet.has(id));
+        validSet.forEach((id) => {
           if (!Runtime.gd.nounIds.includes(id)) Runtime.gd.nounIds.push(id);
         });
         if (Runtime.gd.index >= Runtime.gd.nounIds.length) Runtime.gd.index = 0;
@@ -6037,6 +6097,58 @@
       getCurrent() {
         const id = Runtime.gd.nounIds[Runtime.gd.index];
         return Store.data.words.find((w) => w.id === id) || null;
+      },
+
+      jumpToWord(wordId) {
+        if (!Runtime.gd.nounIds.includes(wordId)) {
+          Runtime.gd.nounIds.unshift(wordId);
+        }
+        Runtime.gd.index = Runtime.gd.nounIds.indexOf(wordId);
+        this.render();
+      },
+
+      syncSideStats() {
+        const gdMeta = this.getGenderMeta();
+        document.getElementById('gd-streak-pill').textContent = `🔥 连对 ${Runtime.gd.streak} 题`;
+        document.getElementById('gd-best-pill').textContent = `最高记录：${Store.data.meta.bestGenderStreak}`;
+        const gdWrongPill = document.getElementById('gd-wrong-pill');
+        if (gdWrongPill) gdWrongPill.textContent = `错误 ${gdMeta.wrongCount} 题`;
+
+        const gdSideTotal = document.getElementById('gd-side-total');
+        const gdSideBest = document.getElementById('gd-side-best');
+        const gdSideWrong = document.getElementById('gd-side-wrong');
+        if (gdSideTotal) gdSideTotal.textContent = String(Runtime.gd.nounIds.length);
+        if (gdSideBest) gdSideBest.textContent = String(Store.data.meta.bestGenderStreak);
+        if (gdSideWrong) gdSideWrong.textContent = String(gdMeta.wrongCount);
+
+        const scopedWrongs = this.getScopedWrongNouns();
+        const countEl = document.getElementById('gd-wrong-group-count');
+        const btnWrongOnly = document.getElementById('btn-gd-wrong-only');
+        const listEl = document.getElementById('gd-wrong-list');
+        if (countEl) countEl.textContent = String(scopedWrongs.length);
+        if (btnWrongOnly) {
+          if (scopedWrongs.length > 0 || Runtime.gd.wrongOnly) {
+            btnWrongOnly.classList.remove('hidden');
+            btnWrongOnly.textContent = Runtime.gd.wrongOnly ? '返回全部已背名词' : `仅练错词 (${scopedWrongs.length})`;
+            btnWrongOnly.className = Runtime.gd.wrongOnly ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm';
+          } else {
+            btnWrongOnly.classList.add('hidden');
+          }
+        }
+        if (listEl) {
+          if (!scopedWrongs.length) {
+            listEl.innerHTML = '暂无错词，继续保持！';
+          } else {
+            listEl.innerHTML =
+              scopedWrongs
+                .slice(0, 18)
+                .map(
+                  (w) =>
+                    `<button type="button" class="badge badge-f" data-gd-jump-word="${escapeHtml(w.id)}" style="cursor:pointer; border:none;">${escapeHtml(w.word)}</button>`
+                )
+                .join('') + (scopedWrongs.length > 18 ? `<span style="color:var(--ink-400);">等 ${scopedWrongs.length} 词</span>` : '');
+          }
+        }
       },
 
       render() {
@@ -6049,12 +6161,7 @@
         const emptyView = document.getElementById('gd-empty-view');
         const kbdHint = document.getElementById('gd-kbd-hint');
 
-        document.getElementById('gd-streak-pill').textContent = `🔥 连对 ${Runtime.gd.streak} 题`;
-        document.getElementById('gd-best-pill').textContent = `最高记录：${Store.data.meta.bestGenderStreak}`;
-        const gdSideTotal = document.getElementById('gd-side-total');
-        const gdSideBest = document.getElementById('gd-side-best');
-        if (gdSideTotal) gdSideTotal.textContent = String(Runtime.gd.nounIds.length);
-        if (gdSideBest) gdSideBest.textContent = String(Store.data.meta.bestGenderStreak);
+        this.syncSideStats();
 
         const item = this.getCurrent();
         if (!item) {
@@ -6100,24 +6207,31 @@
         const theme = getWordTheme(item, false);
         const full = formatFullWord(item);
         const desc = item.gender === 'm' ? '阳性 (un / le)' : '阴性 (une / la)';
+        const gdMeta = this.getGenderMeta();
 
         if (ok) {
           Runtime.gd.streak += 1;
           if (Runtime.gd.streak > Store.data.meta.bestGenderStreak) {
             Store.data.meta.bestGenderStreak = Runtime.gd.streak;
           }
+          if (gdMeta.wrongIds.includes(item.id)) {
+            gdMeta.wrongIds = gdMeta.wrongIds.filter((id) => id !== item.id);
+            gdMeta.updatedAt = Date.now();
+          }
+          Store.incrementReview(item.id);
         } else {
           Runtime.gd.streak = 0;
+          gdMeta.wrongCount += 1;
+          if (!gdMeta.wrongIds.includes(item.id)) {
+            gdMeta.wrongIds.push(item.id);
+          }
+          gdMeta.updatedAt = Date.now();
+          // 同步加入艾宾浩斯复习词组并触发云同步
+          Store.applySrsRating(item.id, 'forgot');
         }
-        Store.incrementReview(item.id);
         updateHeaderProgressOnly();
 
-        document.getElementById('gd-streak-pill').textContent = `🔥 连对 ${Runtime.gd.streak} 题`;
-        document.getElementById('gd-best-pill').textContent = `最高记录：${Store.data.meta.bestGenderStreak}`;
-        const gdSideTotal = document.getElementById('gd-side-total');
-        const gdSideBest = document.getElementById('gd-side-best');
-        if (gdSideTotal) gdSideTotal.textContent = String(Runtime.gd.nounIds.length);
-        if (gdSideBest) gdSideBest.textContent = String(Store.data.meta.bestGenderStreak);
+        this.syncSideStats();
         document.getElementById('gd-stripe').className = `card-top-stripe ${theme.stripe}`;
 
         const artEl = document.getElementById('gd-revealed-article');
@@ -6133,7 +6247,7 @@
           fb.textContent = `✓ 回答正确！${full} — ${desc}`;
         } else {
           fb.className = 'feedback-box feedback-err';
-          fb.textContent = `✗ 记错了，正确答案是：${full}（${desc}）`;
+          fb.textContent = `✗ 记错了，正确答案是：${full}（${desc}）· 已计入错词复习组`;
         }
 
         document.getElementById('btn-gd-masc').disabled = true;
@@ -6158,8 +6272,7 @@
         }
         Runtime.gd.index += 1;
         if (Runtime.gd.index >= Runtime.gd.nounIds.length) {
-          const nouns = Store.getScopedWords().filter((w) => w.gender === 'm' || w.gender === 'f');
-          Runtime.gd.nounIds = shuffle(nouns.map((w) => w.id));
+          Runtime.gd.nounIds = this.buildPriorityQueue();
           Runtime.gd.index = 0;
         }
         this.render();
@@ -6194,18 +6307,22 @@
         return this.getStudiedWords().filter((w) => wrongSet.has(w.id));
       },
 
-      getPoolWords() {
+      /** 构建出题队列：历史拼写错词优先排在最前面复习 */
+      buildPriorityQueue() {
+        const studied = this.getStudiedWords();
+        const spMeta = this.getSpellingMeta();
+        const wrongSet = new Set(spMeta.wrongIds);
+        const wrongPool = studied.filter((w) => wrongSet.has(w.id));
         if (Runtime.sp.wrongOnly) {
-          const wrongWords = this.getScopedWrongWords();
-          if (wrongWords.length > 0) return wrongWords;
+          if (wrongPool.length > 0) return shuffle(wrongPool.map((w) => w.id));
           Runtime.sp.wrongOnly = false;
         }
-        return this.getStudiedWords();
+        const restPool = studied.filter((w) => !wrongSet.has(w.id));
+        return [...shuffle(wrongPool.map((w) => w.id)), ...shuffle(restPool.map((w) => w.id))];
       },
 
       init() {
-        const pool = this.getPoolWords();
-        Runtime.sp.wordIds = shuffle(pool.map((w) => w.id));
+        Runtime.sp.wordIds = this.buildPriorityQueue();
         Runtime.sp.index = 0;
         Runtime.sp.solvedCurrent = false;
         Runtime.sp.revealedCurrent = false;
@@ -6214,8 +6331,7 @@
       },
 
       reconcileAndRender() {
-        const pool = this.getPoolWords();
-        const validIds = new Set(pool.map((w) => w.id));
+        const validIds = new Set(this.buildPriorityQueue());
         Runtime.sp.wordIds = Runtime.sp.wordIds.filter((id) => validIds.has(id));
         validIds.forEach((id) => {
           if (!Runtime.sp.wordIds.includes(id)) Runtime.sp.wordIds.push(id);
@@ -6494,8 +6610,7 @@
         }
         Runtime.sp.index += 1;
         if (Runtime.sp.index >= Runtime.sp.wordIds.length) {
-          const pool = this.getPoolWords();
-          Runtime.sp.wordIds = shuffle(pool.map((w) => w.id));
+          Runtime.sp.wordIds = this.buildPriorityQueue();
           Runtime.sp.index = 0;
         }
         this.render();
@@ -7858,7 +7973,8 @@
             bestGenderStreak: Store.data.meta.bestGenderStreak || 0,
             lastLessonByBook: Store.data.meta.lastLessonByBook || {},
             dailyHistory: Store.data.meta.dailyHistory || {},
-            spelling: SpellingQuiz.getSpellingMeta()
+            spelling: SpellingQuiz.getSpellingMeta(),
+            gender: GenderBlitz.getGenderMeta()
           }
         };
       },
@@ -7972,11 +8088,42 @@
             }
             if (rTime > lTime) lSp.updatedAt = rTime;
           }
+
+          // 6. 合并阴阳性快刷错词复习组
+          const rGd = remote.meta.gender && typeof remote.meta.gender === 'object' ? remote.meta.gender : null;
+          if (rGd) {
+            const lGd = GenderBlitz.getGenderMeta();
+            const rWrong = Number(rGd.wrongCount) || 0;
+            const rTime = Number(rGd.updatedAt) || 0;
+            const lTime = Number(lGd.updatedAt) || 0;
+            if (rWrong > lGd.wrongCount) {
+              lGd.wrongCount = rWrong;
+              changed = true;
+            }
+            if (Array.isArray(rGd.wrongIds)) {
+              if (rTime > lTime) {
+                const mergedWrong = [...new Set(rGd.wrongIds)];
+                if (JSON.stringify(mergedWrong) !== JSON.stringify(lGd.wrongIds)) {
+                  lGd.wrongIds = mergedWrong;
+                  changed = true;
+                }
+              } else {
+                rGd.wrongIds.forEach((id) => {
+                  if (!lGd.wrongIds.includes(id)) {
+                    lGd.wrongIds.push(id);
+                    changed = true;
+                  }
+                });
+              }
+            }
+            if (rTime > lTime) lGd.updatedAt = rTime;
+          }
         }
 
         if (changed) {
           Store.save(true);
           onScopeChanged(false);
+          GenderBlitz.reconcileAndRender();
           SpellingQuiz.reconcileAndRender();
           if (Runtime.activeTab === 'memory') MemoryCurve.render();
           if (Runtime.activeTab === 'books') WordbookManager.renderAll();
@@ -8368,12 +8515,21 @@
       document.getElementById('btn-gd-masc').addEventListener('click', () => GenderBlitz.answer('m'));
       document.getElementById('btn-gd-fem').addEventListener('click', () => GenderBlitz.answer('f'));
       document.getElementById('btn-gd-next').addEventListener('click', () => GenderBlitz.next());
+      document.getElementById('btn-gd-wrong-only').addEventListener('click', () => {
+        Runtime.gd.wrongOnly = !Runtime.gd.wrongOnly;
+        GenderBlitz.init();
+      });
+      document.getElementById('gd-wrong-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-gd-jump-word]');
+        if (!btn) return;
+        GenderBlitz.jumpToWord(btn.dataset.gdJumpWord);
+      });
       document.getElementById('btn-gd-all-lessons').addEventListener('click', () => {
         Store.data.meta.activeLesson = 'all';
         Store.save();
         onScopeChanged(true);
       });
-      document.getElementById('btn-gd-goto-books').addEventListener('click', () => switchMainTab('books'));
+      document.getElementById('btn-gd-goto-books').addEventListener('click', () => switchMainTab('flashcards'));
 
       // --- Tab 3: 拼写测验交互 ---
       mountAccentBar(document.getElementById('sp-accent-bar'), document.getElementById('sp-input'));
