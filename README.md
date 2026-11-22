@@ -1,4 +1,4 @@
-# LumiMot · 法语光词 V2.0
+# LumiMot · V2.0
 
 一个轻量、离线可用、暖光护眼的法语教材背词 Web 应用，基于纯原生 HTML5 + CSS3 + JavaScript (ES6+) 构建。
 
