@@ -3311,7 +3311,9 @@
         <div class="badge-group">
           <span id="sp-scope-badge" class="badge badge-lesson">仅测验已背单词</span>
           <span id="sp-progress-pill" class="badge badge-neutral">0 / 0</span>
-          <span id="sp-score-pill" class="badge badge-v">本轮答对 0 题</span>
+          <span id="sp-score-pill" class="badge badge-v">答对 0 题</span>
+          <span id="sp-wrong-pill" class="badge badge-f">错误 0 题</span>
+          <button id="btn-sp-wrong-only" class="btn btn-soft btn-sm hidden" type="button">仅练错词 (0)</button>
         </div>
         <label class="switch-label">
           <input id="toggle-sp-lenient" class="switch-input amber" type="checkbox" checked />
@@ -3368,40 +3370,49 @@
                 <div id="sp-feedback" class="feedback-box hidden"></div>
 
                 <div class="spelling-actions">
-                  <button id="btn-sp-check" class="btn btn-primary" type="button">检查答案 (Enter)</button>
-                  <button id="btn-sp-reveal" class="btn btn-soft" type="button">看答案</button>
-                  <button id="btn-sp-next" class="btn btn-dark" type="button">下一题 →</button>
+                  <button id="btn-sp-check" class="btn btn-primary" type="button">确认 (Enter)</button>
+                  <button id="btn-sp-reveal" class="btn btn-soft" type="button">显示答案</button>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <aside class="side-guide-card" aria-label="拼写测验进度与重音说明">
-          <h3 class="side-guide-title">✍️ 本轮测验进度</h3>
-          <div class="side-metric-grid">
+        <aside class="side-guide-card" aria-label="拼写测验进度与错词复习组">
+          <h3 class="side-guide-title">✍️ 拼写测验统计</h3>
+          <div class="side-metric-grid" style="grid-template-columns: repeat(3, 1fr);">
             <div class="side-metric-box">
-              <div id="sp-side-correct" class="side-metric-val">0</div>
-              <div class="side-metric-lbl">本轮答对</div>
+              <div id="sp-side-correct" class="side-metric-val" style="color: var(--verb);">0</div>
+              <div class="side-metric-lbl">累计答对</div>
+            </div>
+            <div class="side-metric-box">
+              <div id="sp-side-wrong" class="side-metric-val" style="color: var(--fem);">0</div>
+              <div class="side-metric-lbl">拼写错误</div>
             </div>
             <div class="side-metric-box">
               <div id="sp-side-total" class="side-metric-val">0</div>
-              <div class="side-metric-lbl">本轮词数</div>
+              <div class="side-metric-lbl">本组词数</div>
             </div>
           </div>
           <div>
             <div class="progress-meta" style="margin-bottom: 6px;">
-              <span style="color: var(--ink-500); font-weight: 600;">答题进度</span>
+              <span style="color: var(--ink-500); font-weight: 600;">本轮进度</span>
               <span id="sp-side-pct" class="progress-numbers">0%</span>
             </div>
             <div class="progress-track">
               <div id="sp-side-fill" class="progress-fill"></div>
             </div>
           </div>
+          <div id="sp-wrong-box" class="cheat-item" style="margin-top: 2px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 6px;">
+              <strong style="margin: 0;">📌 拼写错词复习组 (<span id="sp-wrong-group-count">0</span>)</strong>
+            </div>
+            <div id="sp-wrong-list" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; color: var(--ink-500);">暂无错词，继续保持！</div>
+          </div>
           <div class="cheat-list">
             <div class="cheat-item">
-              <strong>⌨️ 键盘提速技巧</strong>
-              输入完成后按 <kbd>Enter</kbd> 检查答案；答对后再按一次 <kbd>Enter</kbd> 直接切下一题。
+              <strong>⌨️ 判分规则</strong>
+              输入后点击「确认」或按 <kbd>Enter</kbd>；答对后按钮变为「下一题 →」。若点击「显示答案」，该词将计入错误并自动加入复习组。
             </div>
             <div class="cheat-item">
               <strong>✨ 宽松重音判分</strong>
@@ -5069,7 +5080,13 @@
                   lastLessonByBook: parsed.meta?.lastLessonByBook || {},
                   autoSpeak: Boolean(parsed.meta?.autoSpeak),
                   queueListCollapsed: Boolean(parsed.meta?.queueListCollapsed),
-                  dailyHistory: parsed.meta?.dailyHistory && typeof parsed.meta.dailyHistory === 'object' ? parsed.meta.dailyHistory : {}
+                  dailyHistory: parsed.meta?.dailyHistory && typeof parsed.meta.dailyHistory === 'object' ? parsed.meta.dailyHistory : {},
+                  spelling: {
+                    correctCount: Number(parsed.meta?.spelling?.correctCount) || 0,
+                    wrongCount: Number(parsed.meta?.spelling?.wrongCount) || 0,
+                    wrongIds: Array.isArray(parsed.meta?.spelling?.wrongIds) ? [...new Set(parsed.meta.spelling.wrongIds)] : [],
+                    updatedAt: Number(parsed.meta?.spelling?.updatedAt) || 0
+                  }
                 }
               };
               this.syncBuiltInCatalog();
@@ -5105,7 +5122,13 @@
             },
             autoSpeak: false,
             queueListCollapsed: false,
-            dailyHistory: {}
+            dailyHistory: {},
+            spelling: {
+              correctCount: 0,
+              wrongCount: 0,
+              wrongIds: [],
+              updatedAt: 0
+            }
           }
         };
         this.save();
@@ -5277,8 +5300,10 @@
       sp: {
         wordIds: [],
         index: 0,
-        correctCount: 0,
-        solvedCurrent: false
+        solvedCurrent: false,
+        revealedCurrent: false,
+        wrongCurrent: false,
+        wrongOnly: false
       },
 
       wl: {
@@ -6145,25 +6170,52 @@
      * 9. Tab 3: 拼写测验模块 (Spelling Quiz + Accent Bar + Lenient Mode)
      * ========================================================================= */
     const SpellingQuiz = {
+      getSpellingMeta() {
+        if (!Store.data.meta.spelling || typeof Store.data.meta.spelling !== 'object') {
+          Store.data.meta.spelling = { correctCount: 0, wrongCount: 0, wrongIds: [], updatedAt: 0 };
+        }
+        if (!Array.isArray(Store.data.meta.spelling.wrongIds)) {
+          Store.data.meta.spelling.wrongIds = [];
+        }
+        return Store.data.meta.spelling;
+      },
+
       /** 仅获取当前范围内已经背过的单词（至少学习/复习过一次） */
       getStudiedWords() {
         return Store.getScopedWords().filter((w) => {
           const p = Store.getProgress(w.id);
-          return p.status !== 'new' || p.reps > 0 || p.lapses > 0 || p.lastReviewedAt > 0;
+          return p.status !== 'new' || p.reviewCount > 0 || p.lapses > 0 || p.lastReviewedAt > 0;
         });
       },
 
+      getScopedWrongWords() {
+        const spMeta = this.getSpellingMeta();
+        const wrongSet = new Set(spMeta.wrongIds);
+        return this.getStudiedWords().filter((w) => wrongSet.has(w.id));
+      },
+
+      getPoolWords() {
+        if (Runtime.sp.wrongOnly) {
+          const wrongWords = this.getScopedWrongWords();
+          if (wrongWords.length > 0) return wrongWords;
+          Runtime.sp.wrongOnly = false;
+        }
+        return this.getStudiedWords();
+      },
+
       init() {
-        const studied = this.getStudiedWords();
-        Runtime.sp.wordIds = shuffle(studied.map((w) => w.id));
+        const pool = this.getPoolWords();
+        Runtime.sp.wordIds = shuffle(pool.map((w) => w.id));
         Runtime.sp.index = 0;
-        Runtime.sp.correctCount = 0;
         Runtime.sp.solvedCurrent = false;
+        Runtime.sp.revealedCurrent = false;
+        Runtime.sp.wrongCurrent = false;
         this.render();
       },
 
       reconcileAndRender() {
-        const validIds = new Set(this.getStudiedWords().map((w) => w.id));
+        const pool = this.getPoolWords();
+        const validIds = new Set(pool.map((w) => w.id));
         Runtime.sp.wordIds = Runtime.sp.wordIds.filter((id) => validIds.has(id));
         validIds.forEach((id) => {
           if (!Runtime.sp.wordIds.includes(id)) Runtime.sp.wordIds.push(id);
@@ -6177,23 +6229,81 @@
         return Store.data.words.find((w) => w.id === id) || null;
       },
 
+      syncActionButton() {
+        const btn = document.getElementById('btn-sp-check');
+        if (!btn) return;
+        if (Runtime.sp.solvedCurrent) {
+          btn.textContent = '下一题 →';
+          btn.className = 'btn btn-dark';
+        } else {
+          btn.textContent = '确认 (Enter)';
+          btn.className = 'btn btn-primary';
+        }
+      },
+
       syncSidePanel() {
+        const spMeta = this.getSpellingMeta();
         const total = Runtime.sp.wordIds.length;
         const pct = total ? Math.round(((Runtime.sp.index + (Runtime.sp.solvedCurrent ? 1 : 0)) / total) * 100) : 0;
         const cEl = document.getElementById('sp-side-correct');
+        const wEl = document.getElementById('sp-side-wrong');
         const tEl = document.getElementById('sp-side-total');
         const pEl = document.getElementById('sp-side-pct');
         const fEl = document.getElementById('sp-side-fill');
-        if (cEl) cEl.textContent = String(Runtime.sp.correctCount);
+        const scorePill = document.getElementById('sp-score-pill');
+        const wrongPill = document.getElementById('sp-wrong-pill');
+        const wrongOnlyBtn = document.getElementById('btn-sp-wrong-only');
+        const wrongGroupCount = document.getElementById('sp-wrong-group-count');
+        const wrongListEl = document.getElementById('sp-wrong-list');
+
+        if (cEl) cEl.textContent = String(spMeta.correctCount);
+        if (wEl) wEl.textContent = String(spMeta.wrongCount);
         if (tEl) tEl.textContent = String(total);
         if (pEl) pEl.textContent = `${pct}%`;
         if (fEl) fEl.style.width = `${pct}%`;
+        if (scorePill) scorePill.textContent = `答对 ${spMeta.correctCount} 题`;
+        if (wrongPill) wrongPill.textContent = `错误 ${spMeta.wrongCount} 题`;
+
+        const scopedWrongs = this.getScopedWrongWords();
+        if (wrongGroupCount) wrongGroupCount.textContent = String(scopedWrongs.length);
+        if (wrongOnlyBtn) {
+          if (scopedWrongs.length > 0 || Runtime.sp.wrongOnly) {
+            wrongOnlyBtn.classList.remove('hidden');
+            wrongOnlyBtn.textContent = Runtime.sp.wrongOnly ? `返回全部已背词` : `仅练错词 (${scopedWrongs.length})`;
+            wrongOnlyBtn.className = Runtime.sp.wrongOnly ? 'btn btn-primary btn-sm' : 'btn btn-soft btn-sm';
+          } else {
+            wrongOnlyBtn.classList.add('hidden');
+          }
+        }
+        if (wrongListEl) {
+          if (!scopedWrongs.length) {
+            wrongListEl.innerHTML = '暂无错词，继续保持！';
+          } else {
+            wrongListEl.innerHTML = scopedWrongs
+              .slice(0, 18)
+              .map(
+                (w) =>
+                  `<button type="button" class="badge badge-f" data-sp-jump-word="${escapeHtml(w.id)}" style="cursor:pointer; border:none;">${escapeHtml(w.word)}</button>`
+              )
+              .join('') + (scopedWrongs.length > 18 ? `<span style="color:var(--ink-400);">等 ${scopedWrongs.length} 词</span>` : '');
+          }
+        }
+      },
+
+      jumpToWord(wordId) {
+        if (!Runtime.sp.wordIds.includes(wordId)) {
+          Runtime.sp.wordIds.unshift(wordId);
+        }
+        Runtime.sp.index = Runtime.sp.wordIds.indexOf(wordId);
+        this.render();
       },
 
       render() {
         const activeView = document.getElementById('sp-active-view');
         const emptyView = document.getElementById('sp-empty-view');
         const item = this.getCurrent();
+
+        this.syncSidePanel();
 
         if (!item) {
           activeView.classList.add('hidden');
@@ -6205,12 +6315,13 @@
         emptyView.classList.add('hidden');
         activeView.classList.remove('hidden');
         Runtime.sp.solvedCurrent = false;
+        Runtime.sp.revealedCurrent = false;
+        Runtime.sp.wrongCurrent = false;
+        this.syncActionButton();
 
         const theme = getWordTheme(item, false);
         document.getElementById('sp-stripe').className = `card-top-stripe ${theme.stripe}`;
         document.getElementById('sp-progress-pill').textContent = `${Runtime.sp.index + 1} / ${Runtime.sp.wordIds.length}`;
-        document.getElementById('sp-score-pill').textContent = `本轮答对 ${Runtime.sp.correctCount} 题`;
-        this.syncSidePanel();
         document.getElementById('sp-lesson').textContent = (item.lesson || '').trim() || '未分课';
         document.getElementById('sp-pos').textContent = item.pos;
         const gb = document.getElementById('sp-gender');
@@ -6245,6 +6356,14 @@
         hintEl.classList.remove('hidden');
       },
 
+      handlePrimaryAction() {
+        if (Runtime.sp.solvedCurrent) {
+          this.next();
+        } else {
+          this.check();
+        }
+      },
+
       check() {
         const item = this.getCurrent();
         if (!item) return;
@@ -6255,7 +6374,7 @@
 
         if (!raw) {
           fb.className = 'feedback-box feedback-info';
-          fb.textContent = '请先输入法语拼写，再点击检查。';
+          fb.textContent = '请先输入法语拼写，再点击「确认」。';
           fb.classList.remove('hidden');
           input.focus();
           return;
@@ -6271,18 +6390,46 @@
         input.classList.remove('state-ok', 'state-warn', 'state-err');
         fb.classList.remove('hidden');
 
-        if (userLower === targetLower || userLower === baseTargetLower) {
+        const isExact = userLower === targetLower || userLower === baseTargetLower;
+        const isLenient =
+          !isExact &&
+          lenient &&
+          (stripFrenchAccents(userLower) === stripFrenchAccents(targetLower) ||
+            stripFrenchAccents(userLower) === stripFrenchAccents(baseTargetLower));
+
+        if (isExact || isLenient) {
+          // 如果已经点过「显示答案」，绝不计入正确统计！
+          if (Runtime.sp.revealedCurrent) {
+            Runtime.sp.solvedCurrent = true;
+            this.syncActionButton();
+            input.classList.add('state-warn');
+            fb.className = 'feedback-box feedback-warn';
+            fb.innerHTML = `📝 <strong>跟写练习正确！</strong>（本题已查看过答案，仍计入错词复习组，请点击「下一题 →」）`;
+            FrenchTTS.speak(formatFullWord(item), 1.0);
+            return;
+          }
+
           if (!Runtime.sp.solvedCurrent) {
-            Runtime.sp.correctCount += 1;
+            const spMeta = this.getSpellingMeta();
+            spMeta.correctCount += 1;
+            spMeta.wrongIds = spMeta.wrongIds.filter((id) => id !== item.id);
+            spMeta.updatedAt = Date.now();
             Runtime.sp.solvedCurrent = true;
             Store.incrementReview(item.id);
             updateHeaderProgressOnly();
-            document.getElementById('sp-score-pill').textContent = `本轮答对 ${Runtime.sp.correctCount} 题`;
             this.syncSidePanel();
+            this.syncActionButton();
           }
-          input.classList.add('state-ok');
-          fb.className = 'feedback-box feedback-ok';
-          fb.innerHTML = `✅ <strong>拼写完全正确！</strong>完整形式：<strong>${escapeHtml(formatFullWord(item))}</strong>（再按 Enter 下一题）`;
+
+          if (isExact) {
+            input.classList.add('state-ok');
+            fb.className = 'feedback-box feedback-ok';
+            fb.innerHTML = `✅ <strong>拼写完全正确！</strong>完整形式：<strong>${escapeHtml(formatFullWord(item))}</strong>（点击「下一题 →」或按 Enter 继续）`;
+          } else {
+            input.classList.add('state-warn');
+            fb.className = 'feedback-box feedback-warn';
+            fb.innerHTML = `⚠️ <strong>宽松重音通过，请留意标准重音！</strong><br/>你的输入：<span style="text-decoration: line-through;">${escapeHtml(raw)}</span> → 标准重音：<strong>${escapeHtml(item.word)}</strong>（点击「下一题 →」或按 Enter 继续）`;
+          }
           FrenchTTS.speak(formatFullWord(item), 1.0);
           return;
         }
@@ -6296,45 +6443,47 @@
         ) {
           input.classList.add('state-warn');
           fb.className = 'feedback-box feedback-warn';
-          fb.innerHTML = `💡 拼写很棒，但测验<strong>只需输入单词本身（不含冠词）</strong>。规范拼写：<strong>${escapeHtml(item.word)}</strong>`;
+          fb.innerHTML = `💡 拼写很棒，但测验<strong>只需输入单词本身（不含冠词）</strong>，请去掉冠词后再点「确认」。`;
           FrenchTTS.speak(formatFullWord(item), 1.0);
           return;
         }
 
-        if (
-          lenient &&
-          (stripFrenchAccents(userLower) === stripFrenchAccents(targetLower) ||
-            stripFrenchAccents(userLower) === stripFrenchAccents(baseTargetLower))
-        ) {
-          if (!Runtime.sp.solvedCurrent) {
-            Runtime.sp.correctCount += 1;
-            Runtime.sp.solvedCurrent = true;
-            Store.incrementReview(item.id);
-            updateHeaderProgressOnly();
-            document.getElementById('sp-score-pill').textContent = `本轮答对 ${Runtime.sp.correctCount} 题`;
-            this.syncSidePanel();
-          }
-          input.classList.add('state-warn');
-          fb.className = 'feedback-box feedback-warn';
-          fb.innerHTML = `⚠️ <strong>宽松重音通过，请留意正确重音符号！</strong><br/>你的输入：<span style="text-decoration: line-through;">${escapeHtml(raw)}</span> → 标准重音：<strong>${escapeHtml(item.word)}</strong>（可重试或按 Enter 下一题）`;
-          FrenchTTS.speak(formatFullWord(item), 1.0);
-          return;
-        }
-
-        Store.incrementReview(item.id);
-        updateHeaderProgressOnly();
         input.classList.add('state-err');
         fb.className = 'feedback-box feedback-err';
-        fb.innerHTML = `❌ <strong>拼写有误</strong>，请重试或点击「看答案」。<div style="font-size: 12px; margin-top: 3px; opacity: 0.9;">提示：长度 ${item.word.length} 字符，首字母为 ${escapeHtml(item.word[0])}</div>`;
+        fb.innerHTML = `❌ <strong>拼写有误</strong>，请修改后再点「确认」；实在想不起来可点击「显示答案」（将计入错误并加入复习组）。<div style="font-size: 12px; margin-top: 3px; opacity: 0.9;">提示：首字母为 ${escapeHtml(item.word[0])}</div>`;
       },
 
       reveal() {
         const item = this.getCurrent();
         if (!item) return;
+
+        Runtime.sp.revealedCurrent = true;
+        Runtime.sp.solvedCurrent = true;
+
+        if (!Runtime.sp.wrongCurrent) {
+          Runtime.sp.wrongCurrent = true;
+          const spMeta = this.getSpellingMeta();
+          spMeta.wrongCount += 1;
+          if (!spMeta.wrongIds.includes(item.id)) {
+            spMeta.wrongIds.push(item.id);
+          }
+          spMeta.updatedAt = Date.now();
+          // 同步加入艾宾浩斯复习词组（标记为需复习并立即持久化 + 触发云同步）
+          Store.applySrsRating(item.id, 'forgot');
+          updateHeaderProgressOnly();
+        }
+
+        this.syncSidePanel();
+        this.syncActionButton();
+
+        const input = document.getElementById('sp-input');
+        input.classList.remove('state-ok', 'state-warn');
+        input.classList.add('state-err');
+
         const fb = document.getElementById('sp-feedback');
-        fb.className = 'feedback-box feedback-info';
+        fb.className = 'feedback-box feedback-err';
         fb.classList.remove('hidden');
-        fb.innerHTML = `📖 正确拼写：<strong>${escapeHtml(item.word)}</strong>（完整形式：${escapeHtml(formatFullWord(item))}）`;
+        fb.innerHTML = `📖 正确拼写：<strong>${escapeHtml(item.word)}</strong>（完整形式：${escapeHtml(formatFullWord(item))}）<div style="font-size: 12px; margin-top: 4px;">已计入拼写错误，并自动加入复习词组。点击「下一题 →」或按 Enter 继续。</div>`;
         FrenchTTS.speak(formatFullWord(item), 1.0);
       },
 
@@ -6345,7 +6494,8 @@
         }
         Runtime.sp.index += 1;
         if (Runtime.sp.index >= Runtime.sp.wordIds.length) {
-          Runtime.sp.wordIds = shuffle(Store.getScopedWords().map((w) => w.id));
+          const pool = this.getPoolWords();
+          Runtime.sp.wordIds = shuffle(pool.map((w) => w.id));
           Runtime.sp.index = 0;
         }
         this.render();
@@ -7707,7 +7857,8 @@
             activeLesson: Store.data.meta.activeLesson,
             bestGenderStreak: Store.data.meta.bestGenderStreak || 0,
             lastLessonByBook: Store.data.meta.lastLessonByBook || {},
-            dailyHistory: Store.data.meta.dailyHistory || {}
+            dailyHistory: Store.data.meta.dailyHistory || {},
+            spelling: SpellingQuiz.getSpellingMeta()
           }
         };
       },
@@ -7728,8 +7879,8 @@
           }
           const rTime = Number(rp.lastReviewedAt) || 0;
           const lTime = Number(lp.lastReviewedAt) || 0;
-          const rScore = (rp.totalReviews || 0) + (rp.status === 'mastered' ? 2 : rp.status === 'learning' ? 1 : 0);
-          const lScore = (lp.totalReviews || 0) + (lp.status === 'mastered' ? 2 : lp.status === 'learning' ? 1 : 0);
+          const rScore = (rp.reviewCount || 0) + (rp.status === 'mastered' ? 2 : rp.status === 'learning' ? 1 : 0);
+          const lScore = (lp.reviewCount || 0) + (lp.status === 'mastered' ? 2 : lp.status === 'learning' ? 1 : 0);
           if (rTime > lTime || (rTime === lTime && rScore > lScore)) {
             Store.data.progress[wid] = rp;
             changed = true;
@@ -7786,11 +7937,47 @@
               changed = true;
             }
           });
+
+          // 5. 合并拼写测验统计与错词复习组
+          const rSp = remote.meta.spelling && typeof remote.meta.spelling === 'object' ? remote.meta.spelling : null;
+          if (rSp) {
+            const lSp = SpellingQuiz.getSpellingMeta();
+            const rCorrect = Number(rSp.correctCount) || 0;
+            const rWrong = Number(rSp.wrongCount) || 0;
+            const rTime = Number(rSp.updatedAt) || 0;
+            const lTime = Number(lSp.updatedAt) || 0;
+            if (rCorrect > lSp.correctCount) {
+              lSp.correctCount = rCorrect;
+              changed = true;
+            }
+            if (rWrong > lSp.wrongCount) {
+              lSp.wrongCount = rWrong;
+              changed = true;
+            }
+            if (Array.isArray(rSp.wrongIds)) {
+              if (rTime > lTime) {
+                const mergedWrong = [...new Set(rSp.wrongIds)];
+                if (JSON.stringify(mergedWrong) !== JSON.stringify(lSp.wrongIds)) {
+                  lSp.wrongIds = mergedWrong;
+                  changed = true;
+                }
+              } else {
+                rSp.wrongIds.forEach((id) => {
+                  if (!lSp.wrongIds.includes(id)) {
+                    lSp.wrongIds.push(id);
+                    changed = true;
+                  }
+                });
+              }
+            }
+            if (rTime > lTime) lSp.updatedAt = rTime;
+          }
         }
 
         if (changed) {
           Store.save(true);
           onScopeChanged(false);
+          SpellingQuiz.reconcileAndRender();
           if (Runtime.activeTab === 'memory') MemoryCurve.render();
           if (Runtime.activeTab === 'books') WordbookManager.renderAll();
         }
@@ -8199,15 +8386,22 @@
         if (cur) FrenchTTS.speak(cur.word, 0.65);
       });
       document.getElementById('btn-sp-hint').addEventListener('click', () => SpellingQuiz.showHint());
-      document.getElementById('btn-sp-check').addEventListener('click', () => SpellingQuiz.check());
+      document.getElementById('btn-sp-check').addEventListener('click', () => SpellingQuiz.handlePrimaryAction());
       document.getElementById('btn-sp-reveal').addEventListener('click', () => SpellingQuiz.reveal());
-      document.getElementById('btn-sp-next').addEventListener('click', () => SpellingQuiz.next());
+      document.getElementById('btn-sp-wrong-only').addEventListener('click', () => {
+        Runtime.sp.wrongOnly = !Runtime.sp.wrongOnly;
+        SpellingQuiz.init();
+      });
+      document.getElementById('sp-wrong-list').addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-sp-jump-word]');
+        if (!btn) return;
+        SpellingQuiz.jumpToWord(btn.dataset.spJumpWord);
+      });
       document.getElementById('btn-sp-goto-books').addEventListener('click', () => switchMainTab('flashcards'));
       document.getElementById('sp-input').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
           e.preventDefault();
-          if (Runtime.sp.solvedCurrent) SpellingQuiz.next();
-          else SpellingQuiz.check();
+          SpellingQuiz.handlePrimaryAction();
         }
       });
 
