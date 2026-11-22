@@ -2,8 +2,14 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#F4E9D2" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="LumiMot" />
   <title>LumiMot · 法语光词 V2.0</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23F4E9D2'/%3E%3Ccircle cx='32' cy='32' r='18' fill='%23E3A84B' opacity='0.26'/%3E%3Ctext x='32' y='42' text-anchor='middle' font-family='Georgia,serif' font-weight='700' font-size='30' fill='%232C241B'%3EL%3C/text%3E%3Ccircle cx='46' cy='18' r='4.5' fill='%23D97706'/%3E%3C/svg%3E" />
   <style>
     /* =========================================================================
@@ -3024,6 +3030,265 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* ==================== PWA 手机端原生 App 浏览体验适配 ==================== */
+    .nav-tab-icon,
+    .nav-tab-short {
+      display: none;
+    }
+
+    body {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    @media (max-width: 768px) {
+      /* 顶部紧凑 App Bar */
+      .app-header {
+        padding-top: env(safe-area-inset-top);
+      }
+
+      .header-inner {
+        padding: 10px 12px 9px;
+        gap: 8px;
+      }
+
+      .header-top-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+      }
+
+      .brand {
+        gap: 8px;
+      }
+
+      .brand-title {
+        font-size: 18px;
+      }
+
+      .brand-sub {
+        display: none;
+      }
+
+      /* 词书 + 课次 + 云同步紧凑排版 */
+      .scope-controls {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 1fr 1fr auto;
+        gap: 6px;
+        align-items: center;
+      }
+
+      .scope-select-wrap {
+        width: 100%;
+        min-width: 0;
+        padding: 0 8px;
+        height: 36px;
+      }
+
+      .scope-label {
+        display: none;
+      }
+
+      .scope-select {
+        width: 100%;
+        max-width: none;
+        font-size: 13px;
+      }
+
+      .sync-trigger-btn {
+        height: 36px;
+        padding: 0 10px;
+        font-size: 12px;
+      }
+
+      .header-progress-row {
+        gap: 5px;
+      }
+
+      .progress-meta {
+        font-size: 11.5px;
+      }
+
+      /* 原生 App 底部固定 6 栏导航栏 */
+      .nav-tabs {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 60;
+        width: 100%;
+        margin: 0;
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+        border-radius: 0;
+        border: 0;
+        border-top: 1px solid var(--border);
+        background: rgba(251, 244, 227, 0.95);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+        box-shadow: 0 -4px 18px rgba(44, 36, 27, 0.08);
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 2px;
+      }
+
+      .nav-tab {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        padding: 6px 2px;
+        border-radius: 10px;
+        min-height: 46px;
+        font-size: 11px;
+        line-height: 1.1;
+      }
+
+      .nav-tab-full {
+        display: none;
+      }
+
+      .nav-tab-icon {
+        display: block;
+        font-size: 17px;
+        line-height: 1.1;
+      }
+
+      .nav-tab-short {
+        display: block;
+        font-size: 10.5px;
+        font-weight: 700;
+      }
+
+      /* 主内容留足底部导航栏安全距离 */
+      .app-main {
+        padding: 12px 12px calc(86px + env(safe-area-inset-bottom));
+      }
+
+      .app-footer {
+        padding-bottom: calc(82px + env(safe-area-inset-bottom));
+        font-size: 11.5px;
+      }
+
+      /* 手机端背词工作台：核心背词卡置顶 -> 例句解析居中 -> 学习队列置底 */
+      .fc-workspace {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+
+      .fc-primary-col {
+        order: 1;
+      }
+
+      .fc-context-panel {
+        order: 2;
+        position: static;
+        max-height: none;
+      }
+
+      .fc-sidebar {
+        order: 3;
+        position: static;
+        max-height: none;
+      }
+
+      .fc-card-body {
+        padding: 18px 16px 20px;
+      }
+
+      .main-french-word {
+        font-size: 30px;
+      }
+
+      /* 手机端 4 档评估按钮改为 2x2 大触控格 */
+      .rating-bar {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+      }
+
+      .rate-btn {
+        min-height: 54px;
+        padding: 10px 8px;
+      }
+
+      /* 隐藏电脑键盘提示 */
+      .kbd-hint {
+        display: none;
+      }
+
+      /* 防止 iOS Safari 点击输入框自动放大页面 */
+      input[type="text"],
+      input[type="password"],
+      input[type="search"],
+      textarea,
+      select {
+        font-size: 16px !important;
+      }
+
+      .spelling-input {
+        font-size: 18px !important;
+        padding: 12px 14px;
+      }
+
+      .spelling-actions {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr;
+        gap: 8px;
+      }
+
+      .spelling-actions .btn {
+        min-height: 46px;
+      }
+
+      .gender-choice-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .gender-btn {
+        min-height: 76px;
+        padding: 14px 10px;
+      }
+
+      .toolbar-row {
+        gap: 8px;
+      }
+
+      .filter-pills {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 4px;
+        max-width: 100%;
+      }
+
+      .filter-pill {
+        flex-shrink: 0;
+      }
+
+      /* 弹窗在手机端更像底部抽屉 */
+      .modal-backdrop {
+        align-items: flex-end;
+        padding: 0;
+      }
+
+      .modal-panel {
+        width: 100%;
+        max-width: 100%;
+        max-height: 90vh;
+        border-radius: 20px 20px 0 0;
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+
+      .toast {
+        bottom: calc(76px + env(safe-area-inset-bottom));
+      }
+    }
   </style>
 </head>
 <body>
@@ -3046,14 +3311,38 @@
           </div>
         </div>
 
-        <!-- 6 大功能主导航（集成在 Web 顶栏） -->
+        <!-- 6 大功能主导航（桌面在顶栏 / 手机端自动变为底部 App 导航栏） -->
         <nav class="nav-tabs" role="tablist" aria-label="主要功能标签">
-          <button class="nav-tab active" data-tab="flashcards" role="tab" aria-selected="true" type="button">背词卡片</button>
-          <button class="nav-tab" data-tab="gender" role="tab" aria-selected="false" type="button">阴阳性快刷</button>
-          <button class="nav-tab" data-tab="spelling" role="tab" aria-selected="false" type="button">拼写测验</button>
-          <button class="nav-tab" data-tab="phonetics" role="tab" aria-selected="false" type="button">发音规则</button>
-          <button class="nav-tab" data-tab="memory" role="tab" aria-selected="false" type="button">记忆曲线</button>
-          <button class="nav-tab" data-tab="books" role="tab" aria-selected="false" type="button">词书管理</button>
+          <button class="nav-tab active" data-tab="flashcards" role="tab" aria-selected="true" type="button">
+            <span class="nav-tab-icon" aria-hidden="true">📖</span>
+            <span class="nav-tab-full">背词卡片</span>
+            <span class="nav-tab-short">背词</span>
+          </button>
+          <button class="nav-tab" data-tab="gender" role="tab" aria-selected="false" type="button">
+            <span class="nav-tab-icon" aria-hidden="true">🧭</span>
+            <span class="nav-tab-full">阴阳性快刷</span>
+            <span class="nav-tab-short">阴阳</span>
+          </button>
+          <button class="nav-tab" data-tab="spelling" role="tab" aria-selected="false" type="button">
+            <span class="nav-tab-icon" aria-hidden="true">✍️</span>
+            <span class="nav-tab-full">拼写测验</span>
+            <span class="nav-tab-short">拼写</span>
+          </button>
+          <button class="nav-tab" data-tab="phonetics" role="tab" aria-selected="false" type="button">
+            <span class="nav-tab-icon" aria-hidden="true">🔊</span>
+            <span class="nav-tab-full">发音规则</span>
+            <span class="nav-tab-short">拼读</span>
+          </button>
+          <button class="nav-tab" data-tab="memory" role="tab" aria-selected="false" type="button">
+            <span class="nav-tab-icon" aria-hidden="true">📈</span>
+            <span class="nav-tab-full">记忆曲线</span>
+            <span class="nav-tab-short">曲线</span>
+          </button>
+          <button class="nav-tab" data-tab="books" role="tab" aria-selected="false" type="button">
+            <span class="nav-tab-icon" aria-hidden="true">📚</span>
+            <span class="nav-tab-full">词书管理</span>
+            <span class="nav-tab-short">词书</span>
+          </button>
         </nav>
 
         <div class="scope-controls">
@@ -9504,6 +9793,12 @@
       onScopeChanged(true);
       if (CloudSync.cfg.token && CloudSync.cfg.autoSync) {
         CloudSync.syncNow({ silent: true });
+      }
+      // 注册 PWA Service Worker（仅在 http/https 下启用，兼容离线缓存与手机桌面安装）
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.protocol === 'http:')) {
+        navigator.serviceWorker.register('./sw.js').catch((err) => {
+          console.warn('Service Worker 注册跳过:', err);
+        });
       }
     }
 

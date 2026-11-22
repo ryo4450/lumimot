@@ -1,0 +1,26 @@
+{
+  "name": "LumiMot · 法语光词",
+  "short_name": "LumiMot",
+  "description": "法语教材按课背词、艾宾浩斯记忆曲线、阴阳性快刷、拼写测验与法语拼读规则",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F4E9D2",
+  "theme_color": "#F4E9D2",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
